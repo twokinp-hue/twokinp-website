@@ -1,18 +1,20 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { 
-  Phone, Mail, MapPin, Sparkles, X, Loader2, 
-  Instagram, Facebook, Linkedin, LayoutDashboard 
+  Phone, Mail, MapPin, X, Loader2, Upload, CheckCircle2,
+  Instagram, Facebook, Linkedin, LayoutDashboard, 
+  Car, Lightbulb, Blinds, Palette, Building, Megaphone
 } from 'lucide-react';
 
-// --- DADOS DO SITE ---
+// --- DADOS DO SITE (Com imagem de fundo nova!) ---
 const SITE_DATA = {
   hero: {
     title: "FUTURE OF VISUALS",
     subtitle: "Marketing • AI Automation • Signs",
-    bg: "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2000&auto=format&fit=crop"
+    // NOVA IMAGEM: Oficina de envelopamento
+    bg: "https://images.unsplash.com/photo-1621994632207-272cb4b6c179?q=80&w=2000&auto=format&fit=crop"
   },
   services: [
     {
@@ -53,55 +55,137 @@ const SITE_DATA = {
 export default function Home() {
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
   
-  // --- COMPONENTE MODAL ---
+  // --- O FORMULÁRIO ORIGINAL COMPLETO (Resgatado!) ---
   const QuoteModal = () => {
     const [step, setStep] = useState(1);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState({ name: '', phone: '', desc: '' });
-    
-    const servicesList = ["Car Wrap", "Indoor Signs", "Outdoor Signs", "Marketing", "AI Automation"];
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [formData, setFormData] = useState({
+      category: '', product: '', width: '', height: '', quantity: 1,
+      description: '', name: '', email: '', phone: '', fileUrl: ''
+    });
+    const fileInputRef = useRef(null);
+
+    // Categorias Originais
+    const categories = [
+      { id: 'wraps', name: 'Car Wrap', icon: <Car size={28}/>, products: ['Full Wrap', 'Partial Wrap', 'Decals/Lettering', 'Color Change'] },
+      { id: 'illuminated', name: 'Illuminated Sign', icon: <Lightbulb size={28}/>, products: ['Channel Letters', 'Light Box/Cabinet', 'Backlit Halo', 'Neon/LED Flex'] },
+      { id: 'window', name: 'Window Graphics', icon: <Blinds size={28}/>, products: ['Perforated (One-Way)', 'Solid Vinyl Blockout', 'Frosted/Etched', 'Clear Decals'] },
+      { id: 'wall', name: 'Wall Graphics', icon: <Palette size={28}/>, products: ['Custom Wallpaper', 'Wall Murals', 'Vinyl Cut Lettering', 'Canvas Prints'] },
+      { id: 'outdoor', name: 'Outdoor Signs', icon: <Building size={28}/>, products: ['Monument Signs', 'Pylon/Pole Signs', 'A-Frame (Sidewalk)', 'Post & Panel'] },
+      { id: 'promo', name: 'Promotional', icon: <Megaphone size={28}/>, products: ['Banners (Mesh/Vinyl)', 'Yard Signs (Coroplast)', 'Trade Show Displays', 'Flags/Feathers'] },
+    ];
+
+    // Estilo dos Inputs (Preto/Cinza sem azul)
+    const inputStyle = "w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-[#FFC107] focus:ring-1 focus:ring-[#FFC107] outline-none transition text-white placeholder-gray-500";
+    const labelStyle = "block text-sm font-bold text-gray-300 mb-1";
+
+    const handleFileChange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      alert("Upload simulado (ative o n8n para funcionar de verdade).");
+      setFormData({ ...formData, fileUrl: "https://exemplo.com/arquivo-simulado.jpg" });
+    };
 
     const handleSubmit = async () => {
-      setIsSubmitting(true);
-      // Simulação de envio
-      setTimeout(() => {
-        alert("Request Sent to 2KINP!");
-        setIsSubmitting(false);
-        setIsQuoteOpen(false);
-      }, 1500);
+      setLoading(true);
+      const webhookUrl = "https://primary-production-6199.up.railway.app/webhook/1f432313-c395-427c-a8b9-669967258643"; 
+      try {
+        await fetch(webhookUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
+        setSuccess(true);
+        setTimeout(() => { setIsQuoteOpen(false); setSuccess(false); setStep(1); }, 3000);
+      } catch (error) {
+        alert("Error sending request.");
+      }
+      setLoading(false);
     };
 
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in">
-        <div className="bg-gray-900 border border-yellow-500/30 p-6 rounded-2xl w-full max-w-lg relative shadow-2xl">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-in fade-in">
+        <div className="bg-gray-900 border border-yellow-500/30 p-6 rounded-2xl w-full max-w-4xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
           <button onClick={() => setIsQuoteOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X /></button>
           
-          <h2 className="text-2xl font-bold text-white mb-6">Get a <span className="text-[#FFC107]">Free Quote</span></h2>
-          
-          {step === 1 && (
-            <div className="space-y-4">
-              <p className="text-gray-400">Select a Service:</p>
-              <div className="grid grid-cols-2 gap-3">
-                {servicesList.map(s => (
-                  <button key={s} onClick={() => setStep(2)} className="p-3 bg-gray-800 hover:bg-[#FFC107] hover:text-black transition rounded-lg text-sm font-bold border border-gray-700">
-                    {s}
-                  </button>
-                ))}
+          {success ? (
+             <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in">
+               <CheckCircle2 className="text-[#FFC107] w-20 h-20 mb-4" />
+               <h2 className="text-3xl font-bold mb-2">Request Received!</h2>
+               <p className="text-gray-400">We'll contact you shortly.</p>
+             </div>
+          ) : (
+            <>
+              {/* Progress Bar */}
+              <div className="flex justify-between mb-8 relative">
+                 <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-800 -translate-y-1/2 z-0"></div>
+                 <div className={`absolute top-1/2 left-0 h-1 bg-[#FFC107] -translate-y-1/2 z-0 transition-all duration-500 ${step === 1 ? 'w-[15%]' : step === 2 ? 'w-[50%]' : 'w-[85%]'}`}></div>
+                 {[1, 2, 3].map((s) => (
+                   <div key={s} className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-all ${step >= s ? 'bg-[#FFC107] border-[#FFC107] text-black' : 'bg-gray-900 border-gray-700 text-gray-500'}`}>{s}</div>
+                 ))}
               </div>
-            </div>
-          )}
 
-          {step === 2 && (
-            <div className="space-y-4">
-              <input placeholder="Name" className="w-full bg-black/50 border border-gray-700 p-3 rounded-lg text-white" onChange={e => setFormData({...formData, name: e.target.value})} />
-              <input placeholder="Phone" className="w-full bg-black/50 border border-gray-700 p-3 rounded-lg text-white" onChange={e => setFormData({...formData, phone: e.target.value})} />
-              <div className="flex gap-3 pt-2">
-                <button onClick={() => setStep(1)} className="px-4 py-2 text-gray-400">Back</button>
-                <button onClick={handleSubmit} disabled={isSubmitting} className="flex-1 bg-[#FFC107] text-black font-bold py-3 rounded-lg flex justify-center gap-2">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : "Send"}
-                </button>
-              </div>
-            </div>
+              {/* STEP 1: Category */}
+              {step === 1 && (
+                <div className="animate-in slide-in-from-right">
+                  <h2 className="text-2xl font-bold mb-6"><span className="text-[#FFC107]">01.</span> Select Category</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {categories.map(cat => (
+                      <button key={cat.id} onClick={() => { setSelectedCategory(cat); setFormData({...formData, category: cat.name}); setStep(2); }}
+                        className="p-6 bg-gray-800 border border-gray-700 rounded-xl hover:border-[#FFC107] hover:bg-[#FFC107]/10 transition group text-left">
+                        <div className="text-[#FFC107] mb-3 group-hover:scale-110 transition">{cat.icon}</div>
+                        <h3 className="font-bold">{cat.name}</h3>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2: Details */}
+              {step === 2 && selectedCategory && (
+                 <div className="animate-in slide-in-from-right">
+                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-3"><button onClick={() => setStep(1)} className="text-gray-400 hover:text-[#FFC107]"><X size={20}/></button> <span className="text-[#FFC107]">02.</span> {selectedCategory.name} Details</h2>
+                   <div className="grid md:grid-cols-2 gap-6">
+                     <div>
+                       <label className={labelStyle}>Product Type</label>
+                       <select className={inputStyle} onChange={e => setFormData({...formData, product: e.target.value})}>
+                         <option value="">Select Type...</option>
+                         {selectedCategory.products.map(p => <option key={p} value={p}>{p}</option>)}
+                       </select>
+                     </div>
+                     <div>
+                        <label className={labelStyle}>Quantity</label>
+                        <input type="number" min="1" className={inputStyle} value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})}/>
+                     </div>
+                     <div><label className={labelStyle}>Width (approx.)</label><input type="text" placeholder='e.g. 10 ft' className={inputStyle} onChange={e => setFormData({...formData, width: e.target.value})}/></div>
+                     <div><label className={labelStyle}>Height (approx.)</label><input type="text" placeholder='e.g. 4 ft' className={inputStyle} onChange={e => setFormData({...formData, height: e.target.value})}/></div>
+                     <div className="md:col-span-2"><label className={labelStyle}>Project Description / Notes</label><textarea className={inputStyle} rows={3} placeholder="Tell us more about your ideas..." onChange={e => setFormData({...formData, description: e.target.value})}/></div>
+                     <div className="md:col-span-2">
+                        <label className={labelStyle}>Have a design/logo? (Optional)</label>
+                        <div onClick={() => fileInputRef.current.click()} className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center cursor-pointer hover:border-[#FFC107] transition bg-gray-800/50">
+                           <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.ai,.eps" />
+                           <Upload className="mx-auto text-gray-400 mb-2" />
+                           <p className="text-gray-400 text-sm">{formData.fileUrl ? "File Selected!" : "Click to upload (Images, PDF, AI)"}</p>
+                        </div>
+                     </div>
+                   </div>
+                   <button onClick={() => setStep(3)} disabled={!formData.product} className="w-full mt-6 bg-[#FFC107] text-black font-bold py-4 rounded-xl hover:bg-yellow-600 transition disabled:opacity-50 disabled:cursor-not-allowed">Continue to Next Step</button>
+                 </div>
+              )}
+
+              {/* STEP 3: Contact Info */}
+              {step === 3 && (
+                 <div className="animate-in slide-in-from-right">
+                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-3"><button onClick={() => setStep(2)} className="text-gray-400 hover:text-[#FFC107]"><X size={20}/></button> <span className="text-[#FFC107]">03.</span> Contact Info</h2>
+                    <div className="space-y-4">
+                       <div><label className={labelStyle}>Your Name</label><input type="text" className={inputStyle} onChange={e => setFormData({...formData, name: e.target.value})}/></div>
+                       <div><label className={labelStyle}>Email Address</label><input type="email" className={inputStyle} onChange={e => setFormData({...formData, email: e.target.value})}/></div>
+                       <div><label className={labelStyle}>Phone Number</label><input type="tel" className={inputStyle} onChange={e => setFormData({...formData, phone: e.target.value})}/></div>
+                    </div>
+                    <button onClick={handleSubmit} disabled={loading || !formData.name || !formData.email} className="w-full mt-8 bg-[#FFC107] text-black font-bold py-4 rounded-xl hover:bg-yellow-600 transition flex justify-center items-center gap-2">
+                       {loading ? <Loader2 className="animate-spin" /> : "Submit Quote Request"}
+                    </button>
+                 </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -120,7 +204,7 @@ export default function Home() {
             <a href="#services" className="hover:text-[#FFC107] transition">Services</a>
             <Link href="/admin" className="text-gray-500 hover:text-white flex items-center gap-1"><LayoutDashboard size={14}/> Admin</Link>
           </div>
-          <button onClick={() => setIsQuoteOpen(true)} className="bg-[#FFC107] hover:bg-yellow-500 text-black px-6 py-2 rounded-full font-bold text-sm transition transform hover:scale-105">
+          <button onClick={() => setIsQuoteOpen(true)} className="bg-[#FFC107] hover:bg-yellow-500 text-black px-6 py-2 rounded-full font-bold text-sm transition transform hover:scale-105 shadow-[0_0_15px_rgba(255,193,7,0.3)]">
             GET QUOTE
           </button>
         </div>
@@ -129,11 +213,11 @@ export default function Home() {
       {/* HERO */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src={SITE_DATA.hero.bg} alt="Background Hero" className="w-full h-full object-cover opacity-50" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+          <img src={SITE_DATA.hero.bg} alt="Car Wrap Shop" className="w-full h-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
         </div>
         <div className="relative z-10 text-center px-4 max-w-5xl">
-          <h2 className="text-[#FFC107] font-bold tracking-[0.3em] mb-4 animate-in slide-in-from-bottom-4">{SITE_DATA.hero.subtitle}</h2>
+          <h2 className="text-[#FFC107] font-bold tracking-[0.3em] mb-4 animate-in slide-in-from-bottom-4 text-xl">{SITE_DATA.hero.subtitle}</h2>
           <h1 className="text-6xl md:text-9xl font-black tracking-tighter mb-8 drop-shadow-2xl animate-in zoom-in">{SITE_DATA.hero.title}</h1>
           <button onClick={() => setIsQuoteOpen(true)} className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-200 transition">Start Project</button>
         </div>
