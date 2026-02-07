@@ -7,60 +7,32 @@ import Link from 'next/link';
 import { 
   Phone, Mail, MapPin, X, Loader2, Upload, CheckCircle2,
   Instagram, Facebook, Linkedin, LayoutDashboard,
-  Menu, ArrowRight, ChevronDown
+  Menu, ArrowRight, ChevronDown, Lock
 } from 'lucide-react';
 
-// --- DADOS DO SITE (Serviços Completos) ---
+// --- DADOS DA LISTA FORNECIDA ---
+const CATEGORIES_DATA = [
+  { id: 'car_wrap', name: 'Car Wrap', icon: '🚗', products: ['Full Wrap', 'Partial Wrap', 'Lettering'] },
+  { id: 'illuminated', name: 'Illuminated Sign', icon: '💡', products: ['LED', 'Neon Flex'] },
+  { id: 'window', name: 'Window Graphics', icon: '🪟', products: ['Perforated', 'Vinyl', 'Lettering', 'Frosted'] },
+  { id: 'wall', name: 'Wall Graphics', icon: '🎨', products: ['Vinyl', 'Wall Paper'] },
+  { id: 'outdoor', name: 'Outdoor Signs', icon: '🏢', products: ['Monuments', 'Pole Signs', 'Storefront Signs', 'Plaques', 'Yard Signs', 'Real Estate Signs', 'Banners', 'Post & Panel Signs', 'Light Box Signs', '3D Letters Illuminated', 'Channel Letters'] },
+  { id: 'promotional', name: 'Promotional Signs', icon: '📣', products: ['Trade Show', 'POS Signs', 'Pull-up Banner', 'Floor Signs', 'Backdrop', 'Stands', 'Booth Display'] },
+  { id: 'printing', name: 'Printing', icon: '🖨️', products: ['Brochure', 'Business card', 'Poster', 'Hang door', 'Menu', 'Envelop', 'Flyers', 'Folders', 'Tri-fold', 'Labels'] },
+  { id: 'services', name: 'Services', icon: '🛠️', products: ['Fabrication', 'Laser Cutting', 'Router CNC', 'Wide Print Format', 'Plotter Cutting', 'Vinyl Installation'] },
+  { id: 'ada', name: 'ADA Signs', icon: '♿', products: ['Hotel', 'Hospital', 'Commercial Building'] },
+  { id: 'directory', name: 'Directory Signs', icon: '🗺️', products: ['Safety signs', 'Street Signs', 'Building Signs', 'Parking Signs'] },
+  { id: 'graphic', name: 'Graphic Design', icon: '✏️', products: ['Design', 'Illustration', 'Logo', 'Brand Book', 'AI Generative', 'Cartoon Created'] },
+  { id: 'marketing', name: 'Digital Marketing', icon: '📈', products: ['Google Ads', 'Meta Ads', 'Social Media Management', 'SEO', 'Webdesign', 'Ecommerce', 'AI Automation', 'Analytics'] },
+  { id: 'custom', name: 'Custom Signs', icon: '✨', products: ['Awards', 'TDF T-Shirt', 'Gifts', 'Neon Signs', 'Illuminated Signs'] }
+];
+
 const SITE_DATA = {
   hero: {
     title: "VISUAL IMPACT & AI",
     subtitle: "Wraps • Signs • Marketing • Automation",
     bg: "https://images.unsplash.com/photo-1621994632207-272cb4b6c179?q=80&w=2000&auto=format&fit=crop"
   },
-  services: [
-    {
-      id: "wraps",
-      title: "Vehicle Wraps",
-      desc: "Commercial fleets, color change, and ceramic coating protection.",
-      img: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?q=80&w=800&auto=format&fit=crop",
-      icon: "🚗"
-    },
-    {
-      id: "signs",
-      title: "Illuminated Signs",
-      desc: "Channel letters, lightboxes, and neon signs for storefronts.",
-      img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=800&auto=format&fit=crop",
-      icon: "💡"
-    },
-    {
-      id: "print",
-      title: "Large Format Print",
-      desc: "Wall murals, window graphics, banners and trade show displays.",
-      img: "https://images.unsplash.com/photo-1586717791821-3f44a5638d0f?q=80&w=800&auto=format&fit=crop",
-      icon: "🖨️"
-    },
-    {
-      id: "marketing",
-      title: "Digital Marketing",
-      desc: "SEO, Google Ads, Social Media Management & Content.",
-      img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop",
-      icon: "📈"
-    },
-    {
-      id: "ai",
-      title: "AI Automation",
-      desc: "Custom Chatbots, CRM integration & Lead Generation flows.",
-      img: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop",
-      icon: "🤖"
-    },
-    {
-      id: "outdoor",
-      title: "Outdoor Signage",
-      desc: "Monument signs, pylon signs and wayfinding solutions.",
-      img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop",
-      icon: "🏢"
-    }
-  ],
   contact: {
     phone: "+1 (407) 555-0199",
     email: "contact@twokinp.com",
@@ -88,28 +60,13 @@ export default function Home() {
     // @ts-ignore
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // LISTA DE SERVIÇOS DO PROJETO ORIGINAL
-    const categories = [
-      { id: 'wraps', name: 'Car Wrap', icon: '🚗', products: ['Full Commercial Wrap', 'Partial Wrap', 'Color Change', 'Decals/Lettering', 'Ceramic Coating'] },
-      { id: 'signs', name: 'Signs (Electric)', icon: '💡', products: ['Channel Letters (Front Lit)', 'Reverse Halo Lit', 'Lightbox Cabinet', 'Neon/LED Flex'] },
-      { id: 'print', name: 'Large Format', icon: '🖨️', products: ['Window Perf (See-through)', 'Wall Murals', 'Floor Graphics', 'Banners', 'Canvas'] },
-      { id: 'outdoor', name: 'Outdoor/Monument', icon: '🏢', products: ['Monument Sign', 'Pylon/Pole Sign', 'Post & Panel', 'A-Frame (Sidewalk)'] },
-      { id: 'marketing', name: 'Marketing', icon: '📈', products: ['Social Media Management', 'Google Ads/SEO', 'Content Creation', 'Web Design'] },
-      { id: 'ai', name: 'AI & Auto', icon: '🤖', products: ['Customer Service Chatbot', 'Lead Gen Automation', 'CRM Integration', 'Workflow Consulting'] },
-    ];
-
     const inputStyle = "w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-[#FFC107] focus:ring-1 focus:ring-[#FFC107] outline-none transition text-white placeholder-gray-500";
     const labelStyle = "block text-sm font-bold text-gray-300 mb-1";
-
-    // @ts-ignore
-    const handleFileChange = (e: any) => {
-      alert("Para enviar arquivos reais, precisamos configurar o armazenamento no n8n. Por enquanto, descreva sua ideia no campo de texto.");
-    };
 
     const handleSubmit = async () => {
       setLoading(true);
       
-      // ✅ SEU LINK DO N8N JÁ ESTÁ AQUI:
+      // ✅ LINK DO SEU N8N CORRIGIDO
       const webhookUrl = "https://webhook.twokinp.cloud/webhook/pedido-site-v2"; 
       
       try {
@@ -123,12 +80,11 @@ export default function Home() {
           }) 
         });
         
-        // Sucesso!
         setSuccess(true);
         setTimeout(() => { setIsQuoteOpen(false); setSuccess(false); setStep(1); }, 3500);
       } catch (error) {
         console.error(error);
-        // Mesmo com erro de CORS, o n8n costuma receber. Mostramos sucesso para o usuário não travar.
+        // Força sucesso visual mesmo se der erro de CORS (comum em testes), pois o n8n geralmente recebe
         setSuccess(true);
         setTimeout(() => { setIsQuoteOpen(false); setSuccess(false); setStep(1); }, 3500);
       }
@@ -137,7 +93,7 @@ export default function Home() {
 
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-in fade-in">
-        <div className="bg-gray-900 border border-yellow-500/30 p-6 rounded-2xl w-full max-w-4xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="bg-gray-900 border border-yellow-500/30 p-6 rounded-2xl w-full max-w-5xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
           <button onClick={() => setIsQuoteOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X /></button>
           
           {success ? (
@@ -157,36 +113,36 @@ export default function Home() {
                  ))}
               </div>
 
-              {/* PASSO 1: Categoria */}
+              {/* PASSO 1: Seleção de Categoria (Grid Ajustado para muitos itens) */}
               {step === 1 && (
                 <div className="animate-in slide-in-from-right">
                   <h2 className="text-2xl font-bold mb-6 text-white"><span className="text-[#FFC107]">01.</span> Select Service</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {categories.map(cat => (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[50vh] overflow-y-auto pr-2">
+                    {CATEGORIES_DATA.map(cat => (
                       <button key={cat.id} onClick={() => { setSelectedCategory(cat); setFormData({...formData, category: cat.name}); setStep(2); }}
-                        className="p-4 md:p-6 bg-gray-800 border border-gray-700 rounded-xl hover:border-[#FFC107] hover:bg-[#FFC107]/10 transition group text-left flex flex-col items-center md:items-start">
-                        <div className="text-3xl md:text-4xl mb-3 group-hover:scale-110 transition">{cat.icon}</div>
-                        <h3 className="font-bold text-white text-sm md:text-base text-center md:text-left">{cat.name}</h3>
+                        className="p-4 bg-gray-800 border border-gray-700 rounded-xl hover:border-[#FFC107] hover:bg-[#FFC107]/10 transition group text-left flex flex-col items-center justify-center gap-2 h-32">
+                        <div className="text-3xl group-hover:scale-110 transition">{cat.icon}</div>
+                        <h3 className="font-bold text-white text-xs md:text-sm text-center leading-tight">{cat.name}</h3>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* PASSO 2: Detalhes */}
+              {/* PASSO 2: Detalhes do Produto */}
               {step === 2 && selectedCategory && (
                  <div className="animate-in slide-in-from-right">
                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
                      <button onClick={() => setStep(1)} className="text-gray-400 hover:text-[#FFC107]"><ArrowRight className="rotate-180" size={24}/></button> 
-                     <span className="text-[#FFC107]">02.</span> Details
+                     <span className="text-[#FFC107]">02.</span> {selectedCategory.name}
                    </h2>
                    
                    <div className="grid md:grid-cols-2 gap-6">
                      <div>
-                       <label className={labelStyle}>Specific Product</label>
+                       <label className={labelStyle}>Select Product</label>
                        <div className="relative">
                          <select className={`${inputStyle} appearance-none`} onChange={(e) => setFormData({...formData, product: e.target.value})}>
-                           <option value="">Select Type...</option>
+                           <option value="">Select Option...</option>
                            {selectedCategory.products.map((p: string) => <option key={p} value={p}>{p}</option>)}
                          </select>
                          <ChevronDown className="absolute right-3 top-3 text-gray-500 pointer-events-none" size={16}/>
@@ -197,8 +153,8 @@ export default function Home() {
                         <input type="number" min="1" className={inputStyle} value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}/>
                      </div>
                      
-                     {/* Campos de Medida (Só mostra se não for Marketing/AI) */}
-                     {!['marketing', 'ai'].includes(selectedCategory.id) && (
+                     {/* Esconde medidas se for Digital Marketing ou Graphic Design */}
+                     {!['marketing', 'graphic', 'services', 'ada'].includes(selectedCategory.id) && (
                        <>
                          <div><label className={labelStyle}>Width (ft/in)</label><input type="text" placeholder='e.g. 10 ft' className={inputStyle} onChange={(e) => setFormData({...formData, width: e.target.value})}/></div>
                          <div><label className={labelStyle}>Height (ft/in)</label><input type="text" placeholder='e.g. 4 ft' className={inputStyle} onChange={(e) => setFormData({...formData, height: e.target.value})}/></div>
@@ -239,22 +195,38 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-[#FFC107] selection:text-black">
       
-      {/* NAVBAR */}
-      <nav className="fixed top-0 w-full z-50 bg-black/90 backdrop-blur-md border-b border-white/10">
+      {/* NAVBAR COM DROPDOWN MENU */}
+      <nav className="fixed top-0 w-full z-50 bg-black/95 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
           <div className="text-2xl font-black tracking-tighter">2<span className="text-[#FFC107]">KINP!</span></div>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-bold tracking-widest uppercase">
-            <a href="#home" className="hover:text-[#FFC107] transition">Home</a>
-            <a href="#services" className="hover:text-[#FFC107] transition">Services</a>
-            <Link href="/admin" className="text-gray-500 hover:text-white flex items-center gap-1"><LayoutDashboard size={14}/> Admin</Link>
+            <Link href="/" className="hover:text-[#FFC107] transition">Home</Link>
+            
+            {/* DROPDOWN SERVICES */}
+            <div className="group relative h-20 flex items-center cursor-pointer">
+              <span className="hover:text-[#FFC107] transition flex items-center gap-1">Services <ChevronDown size={14}/></span>
+              <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] bg-gray-900 border border-white/10 shadow-2xl rounded-b-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 p-6 grid grid-cols-2 gap-4">
+                {CATEGORIES_DATA.map(cat => (
+                  <div key={cat.id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer" onClick={() => setIsQuoteOpen(true)}>
+                    <span className="text-2xl">{cat.icon}</span>
+                    <div className="flex flex-col">
+                      <span className="text-white font-bold text-xs">{cat.name}</span>
+                      <span className="text-gray-500 text-[10px] capitalize">{cat.products[0]}, {cat.products[1]}...</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Link para o Admin com Login */}
+            <Link href="/admin" className="text-gray-500 hover:text-white flex items-center gap-1"><Lock size={14}/> Admin</Link>
           </div>
 
           <button onClick={() => setIsQuoteOpen(true)} className="hidden md:block bg-[#FFC107] hover:bg-yellow-500 text-black px-6 py-2 rounded-full font-bold text-sm transition transform hover:scale-105 shadow-[0_0_15px_rgba(255,193,7,0.3)]">
             GET QUOTE
           </button>
 
-          {/* Mobile Menu Button */}
           <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}><Menu /></button>
         </div>
       </nav>
@@ -272,22 +244,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SERVICES GRID (EXPANDIDA) */}
+      {/* SERVICES LIST PREVIEW */}
       <section id="services" className="py-24 px-4 bg-gray-950">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold mb-12">Our <span className="text-[#FFC107]">Services</span></h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SITE_DATA.services.map((service) => (
-              <div key={service.id} className="group relative h-[300px] rounded-2xl overflow-hidden border border-white/5 bg-gray-900 cursor-pointer">
-                <img src={service.img} alt={service.title} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 group-hover:scale-110 transition duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-8">
-                  <span className="text-4xl mb-3 block">{service.icon}</span>
-                  <h3 className="text-2xl font-bold mb-2 group-hover:text-[#FFC107] transition">{service.title}</h3>
-                  <p className="text-gray-400 text-sm">{service.desc}</p>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {CATEGORIES_DATA.slice(0, 8).map((service) => (
+              <div key={service.id} onClick={() => setIsQuoteOpen(true)} className="group relative h-[250px] rounded-2xl overflow-hidden border border-white/5 bg-gray-900 cursor-pointer hover:border-[#FFC107] transition">
+                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
+                    <span className="text-5xl mb-4 group-hover:scale-110 transition duration-500">{service.icon}</span>
+                    <h3 className="text-xl font-bold text-white mb-2">{service.name}</h3>
+                    <p className="text-gray-500 text-xs">{service.products.slice(0,3).join(', ')}...</p>
+                 </div>
               </div>
             ))}
+          </div>
+          <div className="text-center mt-12">
+            <button onClick={() => setIsQuoteOpen(true)} className="border border-white/20 hover:bg-white text-white hover:text-black px-8 py-3 rounded-full transition font-bold">View All Services</button>
           </div>
         </div>
       </section>
