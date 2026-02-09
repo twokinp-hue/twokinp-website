@@ -15,7 +15,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
 
-// --- CONFIGURAÇÃO FIREBASE ---
+// --- CONFIGURAÇÃO FIREBASE (Sua conta GSI) ---
 const VERCEL_FIREBASE_CONFIG = {
   apiKey: "AIzaSyCxRhZLz3H4zeEEvNkxh4U_ZjeTEGg6PPE",
   authDomain: "the-gsi-catalog.firebaseapp.com",
@@ -30,7 +30,7 @@ const VERCEL_FIREBASE_CONFIG = {
 const DEFAULT_SETTINGS = {
   companyName: "Twokinp",
   tagline: "Visual Impact & AI Automation",
-  primaryColor: "#FFC107", // Amarelo Twokinp
+  primaryColor: "#FFC107", 
   whatsapp: "14075550199",
   email: "twokinp@gmail.com",
   address: "Kissimmee, FL - USA",
@@ -39,7 +39,7 @@ const DEFAULT_SETTINGS = {
   badgeText: "PREMIUM WRAPS" 
 };
 
-const ADMIN_PASSWORD = "admin"; // Senha simples para você testar agora
+const ADMIN_PASSWORD = "admin"; 
 
 const CATEGORIES = [
   "All", "Car Wrap", "Illuminated Signs", "Window Graphics", 
@@ -51,7 +51,7 @@ const CATEGORIES = [
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-v2'; 
+const appId = 'twokinp-site-final-production'; 
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -108,7 +108,6 @@ export default function App() {
 
     const handleSubmit = async () => {
       setLoading(true);
-      // Simulação de envio
       setTimeout(() => { 
         setSuccess(true); 
         setLoading(false);
@@ -129,7 +128,6 @@ export default function App() {
              </div>
           ) : (
             <>
-              {/* Steps Indicator */}
               <div className="flex justify-between mb-8 relative px-2">
                  <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-800 -translate-y-1/2 z-0"></div>
                  <div className={`absolute top-1/2 left-0 h-1 bg-[#FFC107] -translate-y-1/2 z-0 transition-all duration-500 ${step === 1 ? 'w-[15%]' : step === 2 ? 'w-[50%]' : 'w-[85%]'}`}></div>
@@ -197,10 +195,13 @@ export default function App() {
   // --- EFEITOS E LÓGICA ---
   useEffect(() => {
     if (!db) return;
-    const unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+    // Carrega Produtos
+    const unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
+      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    // Carrega Banners
     const unsubBanners = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), (snapshot) => {
         const bData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Se não tiver banner, cria um padrão
         if (bData.length === 0) {
            setBanners([{ id: 'default', title: 'VISUAL IMPACT', subtitle: 'Twokinp Premium Wraps & Signs', image: 'https://images.unsplash.com/photo-1621996659490-6213b19b486c?q=80&w=2070&auto=format&fit=crop', isDefault: true }]);
         } else {
@@ -210,7 +211,7 @@ export default function App() {
     return () => { unsubProducts(); unsubBanners(); };
   }, []);
 
-  // Slideshow timer
+  // Timer do Slideshow
   useEffect(() => {
     if (banners.length <= 1) return;
     const timer = setInterval(() => setCurrentSlide(prev => (prev + 1) % banners.length), 5000);
@@ -259,14 +260,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden selection:bg-yellow-500/30">
       
-      {/* HEADER */}
+      {/* HEADER TOP (IGUAL GSI) */}
       <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-white/10 h-20 flex justify-between items-center px-4 sm:px-8 shadow-sm">
         <div className="flex flex-col cursor-pointer" onClick={() => {setFilter("All"); setIsAdminMode(false);}}>
           <h1 className="text-xl sm:text-2xl font-black italic tracking-tighter uppercase">2<span className="text-[#FFC107]">KINP!</span></h1>
         </div>
         <div className="hidden md:flex flex-1 max-w-md mx-8 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input ref={searchInputRef} type="text" placeholder="Search portfolio..." className="w-full bg-gray-900 border border-white/10 py-2.5 pl-11 pr-4 rounded-2xl text-sm outline-none focus:border-[#FFC107] transition-all font-medium text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <input ref={searchInputRef} type="text" placeholder="Search catalog..." className="w-full bg-gray-900 border border-white/10 py-2.5 pl-11 pr-4 rounded-2xl text-sm outline-none focus:border-[#FFC107] transition-all font-medium text-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <button onClick={() => isAdminMode ? setIsAdminMode(false) : setIsPasswordModalOpen(true)} className={`p-2.5 rounded-2xl transition-all ${isAdminMode ? 'bg-[#FFC107] text-black shadow-lg' : 'text-gray-400 hover:bg-white/10'}`}>
@@ -282,7 +283,7 @@ export default function App() {
         {isAdminMode && (
           <div className="mb-12 space-y-8 animate-in slide-in-from-top-6 duration-700 text-left">
             <div className="bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-white/10">
-               <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><ImageIcon className="w-5 h-5" /> Slideshow Manager</h2>
+               <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><ImageIcon className="w-5 h-5" /> Banner Slideshow</h2>
               <form onSubmit={handleAddBanner} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 relative z-10">
                 <input placeholder="Title (e.g. VISUAL IMPACT)" className="p-4 bg-black/50 border border-white/10 rounded-2xl text-sm text-white outline-none" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} required />
                 <input placeholder="Image Link (https://...)" className="p-4 bg-black/50 border border-white/10 rounded-2xl text-sm text-white outline-none" value={newBanner.image} onChange={e => setNewBanner({...newBanner, image: e.target.value})} />
@@ -321,36 +322,17 @@ export default function App() {
                 <button type="submit" disabled={isSaving} className={`w-full py-4 rounded-[1.5rem] font-black uppercase text-xs text-white shadow-xl transition-all ${editingId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#FFC107] text-black hover:bg-yellow-600'}`}>Save Project</button>
               </form>
             </div>
-            
-            <div className="bg-gray-900 rounded-[2rem] p-6 text-white border border-white/10 overflow-hidden shadow-sm">
-              <div className="max-h-[400px] overflow-y-auto">
-                <table className="w-full text-xs sm:text-sm">
-                  <tbody className="divide-y divide-white/10">
-                    {products.map(p => (
-                      <tr key={p.id} className="group hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-2 font-bold text-left">{p.name}</td>
-                        <td className="py-4 px-2 text-gray-400">{p.category}</td>
-                        <td className="py-4 px-2 text-right flex justify-end gap-2">
-                          <button onClick={() => { setEditingId(p.id); setNewProduct({...p, images: [...(p.images||[p.image]), '','','',''].slice(0,5)}); window.scrollTo({top:0, behavior:'smooth'}); }} className="text-gray-400 hover:text-blue-500 p-2 bg-black rounded-xl"><Pencil size={14} /></button>
-                          <button onClick={() => handleDeleteProduct(p.id)} className="text-gray-400 hover:text-red-500 p-2 bg-black rounded-xl"><Trash2 size={14} /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
         )}
 
-        {/* HERO SLIDESHOW */}
+        {/* HERO SLIDESHOW (IGUAL GSI) */}
         {!isAdminMode && (
           <div className="mb-10 relative h-[350px] sm:h-[550px] rounded-[2rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl bg-gray-900">
             {banners.length > 0 ? banners.map((slide, index) => (
               <div key={slide.id} className={`absolute inset-0 transition-all duration-1000 transform flex items-center px-6 sm:px-14 ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`} style={{ backgroundImage: slide.image ? `url(${slide.image})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                 <div className="relative z-10 max-w-3xl text-left text-white animate-in slide-in-from-bottom-6">
-                  <div className="inline-flex items-center gap-2 bg-[#FFC107] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-black"><Award className="w-3 h-3"/> Premium Quality</div>
+                  <div className="inline-flex items-center gap-2 bg-[#FFC107] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-black"><Award className="w-3 h-3"/> {siteSettings.badgeText}</div>
                   <h2 className="text-3xl sm:text-7xl font-black mb-6 uppercase leading-[0.9] tracking-tighter text-white drop-shadow-lg"> {slide.title} </h2>
                   <p className="text-gray-200 mb-8 text-sm sm:text-xl font-medium max-w-lg leading-relaxed drop-shadow-md">{slide.subtitle}</p>
                   <button onClick={() => setIsQuoteModalOpen(true)} className="bg-white text-black px-8 sm:px-10 py-3 sm:py-4 rounded-full font-black uppercase text-[10px] sm:text-xs hover:bg-[#FFC107] transition-all">Start Project</button>
@@ -360,7 +342,6 @@ export default function App() {
               <div className="flex items-center justify-center h-full text-gray-500">Loading Banners...</div>
             )}
             
-            {/* Dots */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                {banners.map((_, i) => (
                  <button key={i} onClick={() => setCurrentSlide(i)} className={`h-1.5 rounded-full transition-all shadow ${i === currentSlide ? 'w-8 bg-[#FFC107]' : 'w-2 bg-white/50 hover:bg-white'}`} />
@@ -387,7 +368,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* PORTFOLIO GRID */}
+        {/* PORTFOLIO GRID (IGUAL GSI) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
           {filteredProducts.map(product => (
             <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentProductImgIdx(0); }} className="group bg-gray-900 rounded-[2rem] border border-white/5 overflow-hidden hover:border-[#FFC107]/50 transition-all cursor-pointer relative aspect-[4/5] sm:aspect-square">
@@ -442,39 +423,27 @@ export default function App() {
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-2 sm:p-6 overflow-y-auto">
           <div className="bg-gray-900 rounded-none sm:rounded-[3.5rem] max-w-6xl w-full flex flex-col lg:flex-row overflow-hidden shadow-2xl my-auto animate-in zoom-in duration-300 max-h-[95vh] border border-white/10 relative">
-            
-            {/* Image Side */}
             <div className="lg:w-3/5 h-[40vh] lg:h-auto relative bg-black shrink-0 group">
               <div className="w-full h-full flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${currentProductImgIdx * 100}%)` }}>
                 {(selectedProduct.images || [selectedProduct.image]).map((img, i) => <img key={i} src={img} className="w-full h-full object-cover shrink-0" alt="Work" />)}
               </div>
-              
-              {/* Navigation Arrows */}
               {(selectedProduct.images?.length > 1) && (
                 <>
                   <button onClick={() => setCurrentProductImgIdx(prev => (prev - 1 + selectedProduct.images.length) % selectedProduct.images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-[#FFC107] hover:text-black text-white p-3 rounded-full backdrop-blur-md transition-all"><ChevronLeft size={24} /></button>
                   <button onClick={() => setCurrentProductImgIdx(prev => (prev + 1) % selectedProduct.images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-[#FFC107] hover:text-black text-white p-3 rounded-full backdrop-blur-md transition-all"><ChevronRight size={24} /></button>
                 </>
               )}
-              
               <button onClick={() => setSelectedProduct(null)} className="absolute top-6 left-6 bg-black/40 text-white p-2 rounded-full lg:hidden shadow-lg"><X size={24} /></button>
             </div>
-
-            {/* Info Side */}
             <div className="lg:w-2/5 p-8 sm:p-12 flex flex-col relative bg-gray-900 overflow-y-auto">
               <button onClick={() => setSelectedProduct(null)} className="hidden lg:block absolute top-8 right-8 text-gray-500 hover:text-white transition-all"><X size={32} /></button>
-              
               <div className="mt-4">
                  <span className="text-[#FFC107] font-black text-[10px] uppercase bg-[#FFC107]/10 px-4 py-2 rounded-lg w-fit mb-4 block tracking-wider">{selectedProduct.category}</span>
                  <h2 className="text-3xl sm:text-5xl font-black text-white mb-6 uppercase tracking-tighter leading-[0.9]">{selectedProduct.name}</h2>
-                 
                  <div className="bg-black p-6 rounded-[2rem] border border-white/5 mb-8">
                    <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{selectedProduct.description}</p>
                  </div>
-
-                 <button onClick={() => { setSelectedProduct(null); setIsQuoteModalOpen(true); }} className="w-full bg-[#FFC107] text-black py-5 rounded-[2rem] font-black uppercase text-xs shadow-xl flex items-center justify-center gap-3 hover:bg-yellow-600 transition-all">
-                    Request Pricing <ExternalLink size={18} />
-                 </button>
+                 <button onClick={() => { setSelectedProduct(null); setIsQuoteModalOpen(true); }} className="w-full bg-[#FFC107] text-black py-5 rounded-[2rem] font-black uppercase text-xs shadow-xl flex items-center justify-center gap-3 hover:bg-yellow-600 transition-all">Request Pricing <ExternalLink size={18} /></button>
               </div>
             </div>
           </div>
@@ -486,9 +455,7 @@ export default function App() {
 
       {/* FLOAT BUTTON */}
       {!isQuoteModalOpen && !isAdminMode && (
-        <button onClick={() => setIsQuoteModalOpen(true)} className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 bg-[#FFC107] text-black p-5 sm:p-6 rounded-[2.2rem] shadow-[0_0_50px_rgba(255,193,7,0.3)] hover:scale-110 active:scale-95 transition-all z-40 border-4 border-black">
-          <MessageSquare size={32} />
-        </button>
+        <button onClick={() => setIsQuoteModalOpen(true)} className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 bg-[#FFC107] text-black p-5 sm:p-6 rounded-[2.2rem] shadow-[0_0_50px_rgba(255,193,7,0.3)] hover:scale-110 active:scale-95 transition-all z-40 border-4 border-black"><MessageSquare size={32} /></button>
       )}
 
     </div>
