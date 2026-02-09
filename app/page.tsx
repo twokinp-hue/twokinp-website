@@ -50,7 +50,7 @@ const CATEGORIES = [
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-production-v3'; // Versão nova v3
+const appId = 'twokinp-site-final-production-v3'; 
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -79,11 +79,10 @@ export default function App() {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
-  const [adminTab, setAdminTab] = useState("projects"); // projects, banners, settings
+  const [adminTab, setAdminTab] = useState("projects"); 
   const [isSaving, setIsSaving] = useState(false);
   
   const [editingId, setEditingId] = useState(null);
-  // Correção 1: Inicialização robusta do novo produto
   const [newProduct, setNewProduct] = useState({ 
     name: '', category: 'Car Wrap', price: '', description: '', images: ['', '', '', '', ''] 
   });
@@ -91,7 +90,7 @@ export default function App() {
 
   const searchInputRef = useRef(null);
 
-  // --- MODAL DE ORÇAMENTO (CORRIGIDO) ---
+  // --- MODAL DE ORÇAMENTO ---
   const QuoteModal = () => {
     const [step, setStep] = useState(1);
     const [qCategory, setQCategory] = useState(null);
@@ -113,12 +112,11 @@ export default function App() {
     const handleCategorySelect = (cat) => {
       setQCategory(cat);
       setFormData({...formData, category: cat.name});
-      setStep(2); // Vai para o passo 2 e FICA LÁ
+      setStep(2); 
     };
 
     const handleSubmit = async () => {
       setLoading(true);
-      // Simulação de envio
       setTimeout(() => { 
         setSuccess(true); 
         setLoading(false);
@@ -139,7 +137,6 @@ export default function App() {
              </div>
           ) : (
             <>
-              {/* Barra de Progresso */}
               <div className="flex justify-between mb-8 relative px-2">
                  <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-800 -translate-y-1/2 z-0"></div>
                  <div className={`absolute top-1/2 left-0 h-1 bg-[#FFC107] -translate-y-1/2 z-0 transition-all duration-500 ${step === 1 ? 'w-[15%]' : step === 2 ? 'w-[50%]' : 'w-[85%]'}`}></div>
@@ -163,7 +160,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Correção 3: Passo 2 agora é estável e não volta sozinho */}
               {step === 2 && qCategory && (
                  <div className="animate-in slide-in-from-right">
                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
@@ -228,8 +224,8 @@ export default function App() {
            setBanners(bData);
         }
     });
-    // Carrega Configurações (Correção 2)
-    const unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings'), (docSnap) => {
+    // Carrega Configurações (CORREÇÃO APLICADA AQUI: 'settings' -> 'config')
+    const unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), (docSnap) => {
         if (docSnap.exists()) {
             setSiteSettings({...DEFAULT_SETTINGS, ...docSnap.data()});
         }
@@ -257,7 +253,8 @@ export default function App() {
       if (!db || isSaving) return;
       setIsSaving(true);
       try {
-          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings'), siteSettings);
+          // CORREÇÃO APLICADA AQUI TAMBÉM: 'settings' -> 'config'
+          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings);
           alert("Settings Saved!");
       } catch (err) {
           alert("Error saving settings");
@@ -274,7 +271,6 @@ export default function App() {
   };
   const handleDeleteBanner = async (id) => { if (!db || id === 'default' || !window.confirm("Delete?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id)); };
 
-  // Correção 1: Função de Adicionar Produto Corrigida
   const handleAddProduct = async (e) => {
     e.preventDefault(); 
     if (!db || isSaving) return; 
@@ -292,7 +288,7 @@ export default function App() {
       const pData = { 
           ...newProduct, 
           images: filteredImages, 
-          image: filteredImages[0], // Capa
+          image: filteredImages[0], 
           price: Number(newProduct.price) || 0, 
           createdAt: new Date().toISOString() 
       };
@@ -303,7 +299,6 @@ export default function App() {
           await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), pData);
       }
       
-      // Limpa formulário
       setNewProduct({ name: '', category: 'Car Wrap', price: '', description: '', images: ['', '', '', '', ''] }); 
       setEditingId(null);
       alert(editingId ? "Project Updated!" : "Project Added Successfully!");
@@ -383,7 +378,7 @@ export default function App() {
                 </div>
             )}
 
-            {/* TAB: PROJECTS (Correção 1: Inputs de Imagem) */}
+            {/* TAB: PROJECTS */}
             {adminTab === "projects" && (
                 <div className="space-y-8">
                     <div className={`bg-gray-900 border-2 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl transition-all ${editingId ? 'border-blue-500' : 'border-white/5'}`}>
@@ -451,7 +446,7 @@ export default function App() {
                 </div>
             )}
 
-            {/* TAB: SETTINGS (Correção 2: Edição do Rodapé) */}
+            {/* TAB: SETTINGS */}
             {adminTab === "settings" && (
                 <div className="bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><Settings className="w-5 h-5" /> Company Information</h2>
