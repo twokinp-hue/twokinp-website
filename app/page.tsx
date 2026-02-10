@@ -109,8 +109,9 @@ try {
   console.error("Erro ao conectar no Firebase", e); 
 }
 
-// --- COMPONENTE MODAL DE ORÇAMENTO (EXTRAÍDO PARA EVITAR RE-RENDER) ---
-const QuoteModal = ({ onClose }) => {
+// --- COMPONENTE MODAL DE ORÇAMENTO (MEMOIZADO) ---
+// Isso garante que ele não seja destruído quando o pai atualiza
+const QuoteModal = React.memo(({ onClose }) => {
   const [step, setStep] = useState(1);
   const [qCategory, setQCategory] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -122,7 +123,7 @@ const QuoteModal = ({ onClose }) => {
 
   const handleCategorySelect = (cat) => {
     setQCategory(cat);
-    setFormData({...formData, category: cat.category});
+    setFormData(prev => ({...prev, category: cat.category}));
     setStep(2); 
   };
 
@@ -217,7 +218,7 @@ const QuoteModal = ({ onClose }) => {
       </div>
     </div>
   );
-};
+});
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -279,11 +280,12 @@ export default function App() {
     return () => { unsubProducts(); unsubBanners(); unsubSettings(); };
   }, []);
 
+  // --- CORREÇÃO DO TIMER (PAUSA SE O MODAL ESTIVER ABERTO) ---
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (banners.length <= 1 || isQuoteModalOpen) return; // Se modal aberto, PAUSA o timer
     const timer = setInterval(() => setCurrentSlide(prev => (prev + 1) % banners.length), 5000);
     return () => clearInterval(timer);
-  }, [banners]);
+  }, [banners, isQuoteModalOpen]); // Recria o timer se o estado do modal mudar
 
   useEffect(() => {
     if (!auth) return;
