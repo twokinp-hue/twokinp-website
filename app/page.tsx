@@ -136,14 +136,12 @@ export default function App() {
   });
   const [newBanner, setNewBanner] = useState({ title: '', subtitle: '', image: '', active: true });
 
-  // REFS PARA SCROLL AUTOMÁTICO
   const searchInputRef = useRef(null);
   const portfolioRef = useRef(null);
 
   // --- FUNÇÃO DE CLIQUE NO FILTRO COM SCROLL ---
   const handleFilterClick = (categoryName) => {
     setFilter(categoryName);
-    // Rola até a galeria com um pequeno ajuste para o cabeçalho não cobrir
     if (portfolioRef.current) {
         portfolioRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -550,8 +548,8 @@ export default function App() {
           </div>
         )}
 
-        {/* PORTFOLIO GRID */}
-        <div ref={portfolioRef} className="scroll-mt-32 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+        {/* PORTFOLIO GRID (5 COLUNAS) */}
+        <div ref={portfolioRef} className="scroll-mt-32 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 text-left">
           {filteredProducts.map(product => (
             <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentProductImgIdx(0); }} className="group bg-gray-900 rounded-[2rem] border border-white/5 overflow-hidden hover:border-[#FFC107]/50 transition-all cursor-pointer relative aspect-[4/5] sm:aspect-square">
               <img src={product.images ? product.images[0] : product.image} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-70 group-hover:opacity-100" alt={product.name} />
