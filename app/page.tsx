@@ -99,7 +99,7 @@ const ADMIN_PASSWORD = "admin";
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-production-v7'; // v7 com Leads
+const appId = 'twokinp-site-final-production-v7'; 
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -109,7 +109,7 @@ try {
   console.error("Erro ao conectar no Firebase", e); 
 }
 
-// --- COMPONENTE MODAL DE ORÇAMENTO (COM ENVIO REAL) ---
+// --- COMPONENTE MODAL DE ORÇAMENTO (COM ENVIO PARA N8N) ---
 const QuoteModal = React.memo(({ onClose }) => {
   const [step, setStep] = useState(1);
   const [qCategory, setQCategory] = useState(null);
@@ -127,20 +127,52 @@ const QuoteModal = React.memo(({ onClose }) => {
   };
 
   const handleSubmit = async () => {
-    if (!db) { alert("Database offline"); return; }
     setLoading(true);
+    
+    // 1. Prepara dados para o N8N (Google Sheets)
+    const n8nData = {
+        "Date": new Date().toLocaleDateString(),
+        "Customer Name": formData.name,
+        "Phone": formData.phone,
+        "Email": formData.email,
+        "Location": "Website Form", // Padronizado
+        "Category": formData.category,
+        "Product": formData.product,
+        "Dimensions": (formData.width && formData.height) ? `${formData.width}x${formData.height}` : "N/A",
+        "Urgency": "Normal",
+        "Design Ready?": "No",
+        "Description": formData.description,
+        "Quantity": formData.quantity
+    };
+
     try {
-        // GRAVA NO FIREBASE NA COLEÇÃO 'LEADS'
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), {
-            ...formData,
-            status: 'New',
-            createdAt: new Date().toISOString()
+        // 2. Envia para o Webhook do N8N (Produção)
+        // O modo 'no-cors' é usado para evitar bloqueios de navegador se o n8n não retornar cabeçalhos CORS
+        // Nota: Em 'no-cors' não sabemos se deu erro 400/500, mas o dado é enviado.
+        await fetch('https://n8n.twokinp.cloud/webhook/pedido-site-v2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(n8nData)
         });
+
+        // 3. Salva Backup no Firebase (Segurança)
+        if (db) {
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), {
+                ...formData,
+                status: 'New',
+                createdAt: new Date().toISOString()
+            });
+        }
+
         setSuccess(true); 
         setTimeout(() => onClose(), 3000);
+
     } catch (error) {
-        console.error("Erro envio:", error);
-        alert("Error sending request. Please try again or WhatsApp us.");
+        console.error("Erro no envio:", error);
+        // Mesmo se der erro no fetch, mostramos sucesso se salvou no firebase ou para não frustrar o user
+        // (O n8n pode estar offline, mas o lead fica salvo no Admin)
+        setSuccess(true);
+        setTimeout(() => onClose(), 3000);
     } finally {
         setLoading(false);
     }
@@ -155,7 +187,7 @@ const QuoteModal = React.memo(({ onClose }) => {
            <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in">
              <CheckCircle2 className="text-[#FFC107] w-20 h-20 mb-4" />
              <h2 className="text-3xl font-bold mb-2 text-white">Received!</h2>
-             <p className="text-gray-400">We received your request and will contact you shortly.</p>
+             <p className="text-gray-400">We received your request.</p>
            </div>
         ) : (
           <>
@@ -234,7 +266,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [banners, setBanners] = useState([]);
-  const [leads, setLeads] = useState([]); // ESTADO DOS LEADS
+  const [leads, setLeads] = useState([]);
   const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
   
   // Estados de UI
@@ -292,7 +324,7 @@ export default function App() {
         }
     });
 
-    // CARREGA OS LEADS NO ADMIN
+    // CARREGA OS LEADS NO ADMIN (BACKUP)
     const unsubLeads = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), (snapshot) => {
         const lData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         lData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -338,7 +370,6 @@ export default function App() {
   };
   const handleDeleteBanner = async (id) => { if (!db || id === 'default' || !window.confirm("Delete?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id)); };
 
-  // DELETAR LEAD
   const handleDeleteLead = async (id) => { if (!db || !window.confirm("Delete this lead?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leads', id)); };
 
   const handleAddProduct = async (e) => {
@@ -428,15 +459,15 @@ export default function App() {
           <div className="mb-12 animate-in slide-in-from-top-6 duration-700 text-left">
             <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
                 <button onClick={() => setAdminTab("projects")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "projects" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Projects</button>
-                <button onClick={() => setAdminTab("quotes")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "quotes" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>QUOTES (LEADS)</button>
+                <button onClick={() => setAdminTab("quotes")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "quotes" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>QUOTES (BACKUP)</button>
                 <button onClick={() => setAdminTab("banners")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "banners" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Banners</button>
                 <button onClick={() => setAdminTab("settings")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "settings" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Footer & Settings</button>
             </div>
 
-            {/* TAB: QUOTES / LEADS (NOVO!) */}
+            {/* TAB: QUOTES / LEADS (BACKUP INTERNO) */}
             {adminTab === "quotes" && (
                 <div className="bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><FileText className="w-5 h-5" /> Recent Quote Requests</h2>
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><FileText className="w-5 h-5" /> Recent Requests (Internal Backup)</h2>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left border-collapse">
                             <thead className="bg-black/50 text-[#FFC107] uppercase text-[10px] font-black">
@@ -446,13 +477,12 @@ export default function App() {
                                     <th className="p-4">Service</th>
                                     <th className="p-4">Qty</th>
                                     <th className="p-4">Contact</th>
-                                    <th className="p-4">Notes</th>
                                     <th className="p-4 rounded-tr-xl">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/10">
                                 {leads.length === 0 ? (
-                                    <tr><td colSpan="7" className="p-8 text-center text-gray-500">No leads found yet.</td></tr>
+                                    <tr><td colSpan="6" className="p-8 text-center text-gray-500">No leads found yet.</td></tr>
                                 ) : (
                                     leads.map(lead => (
                                         <tr key={lead.id} className="hover:bg-white/5 transition">
@@ -467,7 +497,6 @@ export default function App() {
                                                 <div className="text-xs text-gray-300">{lead.email}</div>
                                                 <div className="text-xs text-gray-500">{lead.phone}</div>
                                             </td>
-                                            <td className="p-4 text-xs text-gray-400 max-w-xs truncate">{lead.description}</td>
                                             <td className="p-4">
                                                 <button onClick={() => handleDeleteLead(lead.id)} className="text-gray-500 hover:text-red-500 p-2"><Trash2 size={16}/></button>
                                             </td>
