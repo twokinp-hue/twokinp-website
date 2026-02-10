@@ -365,14 +365,13 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         
-        {/* --- FILTER CATEGORIES (MOVIDO PARA O TOPO) --- */}
+        {/* --- FILTER CATEGORIES (NO TOPO - AJUSTADO) --- */}
         {!isAdminMode && (
           <div className="flex flex-col gap-6 mb-8 animate-in slide-in-from-top-4">
-            {/* Scroll Horizontal Moderno (Funciona em Desktop e Mobile) */}
-            <div className="flex overflow-x-auto gap-3 pb-4 scrollbar-hide">
+            <div className="flex overflow-x-auto gap-2 pb-4 scrollbar-hide">
               <button 
                 onClick={() => setFilter("All")} 
-                className={`min-w-[80px] h-14 px-2 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all flex items-center justify-center text-center ${filter === "All" ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
+                className={`w-16 h-10 px-1 rounded-lg text-[9px] font-black uppercase tracking-tight leading-none border transition-all flex items-center justify-center text-center ${filter === "All" ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
               >
                 ALL
               </button>
@@ -380,7 +379,7 @@ export default function App() {
                 <button 
                   key={cat.category} 
                   onClick={() => setFilter(cat.category)} 
-                  className={`min-w-[90px] h-14 px-2 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all flex items-center justify-center text-center leading-3 whitespace-normal ${filter === cat.category ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
+                  className={`w-24 h-10 px-1 rounded-lg text-[9px] font-black uppercase tracking-tight leading-none border transition-all flex items-center justify-center text-center whitespace-normal ${filter === cat.category ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
                 >
                   {cat.category}
                 </button>
