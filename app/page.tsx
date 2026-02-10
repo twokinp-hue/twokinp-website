@@ -99,7 +99,7 @@ const ADMIN_PASSWORD = "admin";
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-production-v5'; 
+const appId = 'twokinp-site-final-production-v6'; 
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -108,6 +108,116 @@ try {
 } catch (e) { 
   console.error("Erro ao conectar no Firebase", e); 
 }
+
+// --- COMPONENTE MODAL DE ORÇAMENTO (EXTRAÍDO PARA EVITAR RE-RENDER) ---
+const QuoteModal = ({ onClose }) => {
+  const [step, setStep] = useState(1);
+  const [qCategory, setQCategory] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    category: '', product: '', width: '', height: '', quantity: 1,
+    description: '', name: '', email: '', phone: '', fileUrl: ''
+  });
+
+  const handleCategorySelect = (cat) => {
+    setQCategory(cat);
+    setFormData({...formData, category: cat.category});
+    setStep(2); 
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setTimeout(() => { 
+      setSuccess(true); 
+      setLoading(false);
+      setTimeout(() => onClose(), 3000);
+    }, 1500);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in fade-in">
+      <div className="bg-gray-900 border border-yellow-500/30 p-6 rounded-2xl w-full max-w-4xl relative shadow-2xl max-h-[90vh] overflow-y-auto text-left">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X /></button>
+        
+        {success ? (
+           <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in">
+             <CheckCircle2 className="text-[#FFC107] w-20 h-20 mb-4" />
+             <h2 className="text-3xl font-bold mb-2 text-white">Received!</h2>
+             <p className="text-gray-400">We will contact you shortly.</p>
+           </div>
+        ) : (
+          <>
+            <div className="flex justify-between mb-8 relative px-2">
+               <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-800 -translate-y-1/2 z-0"></div>
+               <div className={`absolute top-1/2 left-0 h-1 bg-[#FFC107] -translate-y-1/2 z-0 transition-all duration-500 ${step === 1 ? 'w-[15%]' : step === 2 ? 'w-[50%]' : 'w-[85%]'}`}></div>
+               {[1, 2, 3].map((s) => (
+                 <div key={s} className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 transition-all ${step >= s ? 'bg-[#FFC107] border-[#FFC107] text-black' : 'bg-gray-900 border-gray-700 text-gray-500'}`}>{s}</div>
+               ))}
+            </div>
+
+            {step === 1 && (
+              <div className="animate-in slide-in-from-right">
+                <h2 className="text-2xl font-bold mb-6 text-white"><span className="text-[#FFC107]">01.</span> Select Service</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {SERVICES_DATA.map(cat => (
+                    <button key={cat.category} onClick={() => handleCategorySelect(cat)}
+                      className="p-6 bg-gray-800 border border-gray-700 rounded-xl hover:border-[#FFC107] hover:bg-[#FFC107]/10 transition group text-left flex flex-col items-center">
+                      <div className="text-[#FFC107] mb-3 group-hover:scale-110 transition">{cat.icon}</div>
+                      <h3 className="font-bold text-white text-sm">{cat.category}</h3>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && qCategory && (
+               <div className="animate-in slide-in-from-right">
+                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
+                   <button onClick={() => setStep(1)} className="text-gray-400 hover:text-[#FFC107]"><ArrowRight className="rotate-180" size={24}/></button> <span className="text-[#FFC107]">02.</span> Details: {qCategory.category}
+                 </h2>
+                 <div className="grid md:grid-cols-2 gap-6">
+                   <div>
+                     <label className="block text-gray-400 text-sm mb-2">Select Specific Product</label>
+                     <select 
+                      className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" 
+                      value={formData.product}
+                      onChange={(e) => setFormData({...formData, product: e.target.value})}
+                     >
+                       <option value="">-- Choose an option --</option>
+                       {qCategory.products.map(p => <option key={p} value={p}>{p}</option>)}
+                     </select>
+                   </div>
+                   <div><label className="block text-gray-400 text-sm mb-2">Quantity</label><input type="number" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}/></div>
+                   <div className="md:col-span-2"><label className="block text-gray-400 text-sm mb-2">Description / Notes</label><textarea className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}/></div>
+                 </div>
+                 <button onClick={() => setStep(3)} disabled={!formData.product} className="w-full mt-6 bg-[#FFC107] text-black font-bold py-4 rounded-xl hover:bg-yellow-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                   {formData.product ? "Next Step" : "Select a Product to Continue"}
+                 </button>
+               </div>
+            )}
+
+            {step === 3 && (
+               <div className="animate-in slide-in-from-right">
+                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
+                    <button onClick={() => setStep(2)} className="text-gray-400 hover:text-[#FFC107]"><ArrowRight className="rotate-180" size={24}/></button> <span className="text-[#FFC107]">03.</span> Contact Info
+                  </h2>
+                  <div className="space-y-4">
+                     <div><label className="block text-gray-400 text-sm mb-2">Your Name</label><input type="text" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" onChange={(e) => setFormData({...formData, name: e.target.value})}/></div>
+                     <div><label className="block text-gray-400 text-sm mb-2">Email</label><input type="email" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" onChange={(e) => setFormData({...formData, email: e.target.value})}/></div>
+                     <div><label className="block text-gray-400 text-sm mb-2">Phone (Optional)</label><input type="tel" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" onChange={(e) => setFormData({...formData, phone: e.target.value})}/></div>
+                  </div>
+                  <button onClick={handleSubmit} disabled={loading || !formData.email} className="w-full mt-8 bg-[#FFC107] text-black font-bold py-4 rounded-xl hover:bg-yellow-600 transition flex justify-center items-center gap-2">
+                     {loading ? <Loader2 className="animate-spin" /> : "SEND REQUEST"}
+                  </button>
+               </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -145,116 +255,6 @@ export default function App() {
     if (portfolioRef.current) {
         portfolioRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  };
-
-  // --- MODAL DE ORÇAMENTO ---
-  const QuoteModal = () => {
-    const [step, setStep] = useState(1);
-    const [qCategory, setQCategory] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [formData, setFormData] = useState({
-      category: '', product: '', width: '', height: '', quantity: 1,
-      description: '', name: '', email: '', phone: '', fileUrl: ''
-    });
-
-    const handleCategorySelect = (cat) => {
-      setQCategory(cat);
-      setFormData({...formData, category: cat.category});
-      setStep(2); 
-    };
-
-    const handleSubmit = async () => {
-      setLoading(true);
-      setTimeout(() => { 
-        setSuccess(true); 
-        setLoading(false);
-        setTimeout(() => setIsQuoteModalOpen(false), 3000);
-      }, 1500);
-    };
-
-    return (
-      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in fade-in">
-        <div className="bg-gray-900 border border-yellow-500/30 p-6 rounded-2xl w-full max-w-4xl relative shadow-2xl max-h-[90vh] overflow-y-auto text-left">
-          <button onClick={() => setIsQuoteModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X /></button>
-          
-          {success ? (
-             <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in">
-               <CheckCircle2 className="text-[#FFC107] w-20 h-20 mb-4" />
-               <h2 className="text-3xl font-bold mb-2 text-white">Received!</h2>
-               <p className="text-gray-400">We will contact you shortly.</p>
-             </div>
-          ) : (
-            <>
-              <div className="flex justify-between mb-8 relative px-2">
-                 <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-800 -translate-y-1/2 z-0"></div>
-                 <div className={`absolute top-1/2 left-0 h-1 bg-[#FFC107] -translate-y-1/2 z-0 transition-all duration-500 ${step === 1 ? 'w-[15%]' : step === 2 ? 'w-[50%]' : 'w-[85%]'}`}></div>
-                 {[1, 2, 3].map((s) => (
-                   <div key={s} className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 transition-all ${step >= s ? 'bg-[#FFC107] border-[#FFC107] text-black' : 'bg-gray-900 border-gray-700 text-gray-500'}`}>{s}</div>
-                 ))}
-              </div>
-
-              {step === 1 && (
-                <div className="animate-in slide-in-from-right">
-                  <h2 className="text-2xl font-bold mb-6 text-white"><span className="text-[#FFC107]">01.</span> Select Service</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {SERVICES_DATA.map(cat => (
-                      <button key={cat.category} onClick={() => handleCategorySelect(cat)}
-                        className="p-6 bg-gray-800 border border-gray-700 rounded-xl hover:border-[#FFC107] hover:bg-[#FFC107]/10 transition group text-left flex flex-col items-center">
-                        <div className="text-[#FFC107] mb-3 group-hover:scale-110 transition">{cat.icon}</div>
-                        <h3 className="font-bold text-white text-sm">{cat.category}</h3>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && qCategory && (
-                 <div className="animate-in slide-in-from-right">
-                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
-                     <button onClick={() => setStep(1)} className="text-gray-400 hover:text-[#FFC107]"><ArrowRight className="rotate-180" size={24}/></button> <span className="text-[#FFC107]">02.</span> Details: {qCategory.category}
-                   </h2>
-                   <div className="grid md:grid-cols-2 gap-6">
-                     <div>
-                       <label className="block text-gray-400 text-sm mb-2">Select Specific Product</label>
-                       <select 
-                        className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" 
-                        value={formData.product}
-                        onChange={(e) => setFormData({...formData, product: e.target.value})}
-                       >
-                         <option value="">-- Choose an option --</option>
-                         {qCategory.products.map(p => <option key={p} value={p}>{p}</option>)}
-                       </select>
-                     </div>
-                     <div><label className="block text-gray-400 text-sm mb-2">Quantity</label><input type="number" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}/></div>
-                     <div className="md:col-span-2"><label className="block text-gray-400 text-sm mb-2">Description / Notes</label><textarea className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}/></div>
-                   </div>
-                   <button onClick={() => setStep(3)} disabled={!formData.product} className="w-full mt-6 bg-[#FFC107] text-black font-bold py-4 rounded-xl hover:bg-yellow-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                     {formData.product ? "Next Step" : "Select a Product to Continue"}
-                   </button>
-                 </div>
-              )}
-
-              {step === 3 && (
-                 <div className="animate-in slide-in-from-right">
-                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
-                      <button onClick={() => setStep(2)} className="text-gray-400 hover:text-[#FFC107]"><ArrowRight className="rotate-180" size={24}/></button> <span className="text-[#FFC107]">03.</span> Contact Info
-                    </h2>
-                    <div className="space-y-4">
-                       <div><label className="block text-gray-400 text-sm mb-2">Your Name</label><input type="text" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" onChange={(e) => setFormData({...formData, name: e.target.value})}/></div>
-                       <div><label className="block text-gray-400 text-sm mb-2">Email</label><input type="email" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" onChange={(e) => setFormData({...formData, email: e.target.value})}/></div>
-                       <div><label className="block text-gray-400 text-sm mb-2">Phone (Optional)</label><input type="tel" className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" onChange={(e) => setFormData({...formData, phone: e.target.value})}/></div>
-                    </div>
-                    <button onClick={handleSubmit} disabled={loading || !formData.email} className="w-full mt-8 bg-[#FFC107] text-black font-bold py-4 rounded-xl hover:bg-yellow-600 transition flex justify-center items-center gap-2">
-                       {loading ? <Loader2 className="animate-spin" /> : "SEND REQUEST"}
-                    </button>
-                 </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
   };
 
   // --- EFEITOS E LÓGICA ---
@@ -635,8 +635,8 @@ export default function App() {
         </div>
       )}
 
-      {/* GLOBAL QUOTE MODAL */}
-      {isQuoteModalOpen && <QuoteModal />}
+      {/* GLOBAL QUOTE MODAL (RENDERIZADO AGORA FORA DO APP) */}
+      {isQuoteModalOpen && <QuoteModal onClose={() => setIsQuoteModalOpen(false)} />}
 
       {/* FLOAT BUTTON */}
       {!isQuoteModalOpen && !isAdminMode && (
