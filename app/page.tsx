@@ -7,7 +7,8 @@ import {
   CheckCircle2, Share2, BarChart3, TrendingUp, ChevronDown, MapPin, 
   Mail, Phone, Award, Pencil, PlayCircle, Youtube, ChevronLeft, ChevronRight,
   Loader2, Menu, ArrowRight, MessageSquare, Car, Lightbulb, Printer, Building,
-  PlusCircle, Trash2, Settings, Image as ImageIcon, Globe, Instagram, Facebook
+  PlusCircle, Trash2, Settings, Image as ImageIcon, Globe, Instagram, Facebook, Linkedin,
+  Palette, PenTool, Megaphone, Maximize
 } from 'lucide-react';
 
 // Firebase Imports
@@ -26,31 +27,79 @@ const VERCEL_FIREBASE_CONFIG = {
   measurementId: "G-FHDQQKEE7E"
 };
 
+// --- DADOS PADRÃO ---
 const DEFAULT_SETTINGS = {
   companyName: "Twokinp",
-  tagline: "Visual Impact & AI Automation",
-  primaryColor: "#FFC107", 
+  address: "Kissimmee, FL - USA",
   whatsapp: "14075550199",
   email: "twokinp@gmail.com",
-  address: "Kissimmee, FL - USA",
-  instagram: "@twokinp",
-  copyright: "Twokinp Agency LLC",
+  instagramUrl: "https://instagram.com/twokinp",
+  facebookUrl: "https://facebook.com",
+  linkedinUrl: "",
+  copyright: "Twokinp Agency LLC. All Rights Reserved.",
   badgeText: "PREMIUM WRAPS" 
 };
 
-const ADMIN_PASSWORD = "admin"; 
-
-const CATEGORIES = [
-  "All", "Car Wrap", "Illuminated Signs", "Window Graphics", 
-  "Wall Graphics", "Outdoor Signs", "Promotional Signs", 
-  "Printing", "Services", "ADA Signs", "Directory Signs", 
-  "Graphic Design", "Digital Marketing", "Custom Signs"
+// --- SUA LISTA DE CATEGORIAS (DEFINITIVA) ---
+const SERVICES_DATA = [
+  { 
+    category: "Art Design", 
+    icon: <Palette size={24}/>,
+    products: ["Canvas Print", "Acrylic Print", "T-Shirt TDF"] 
+  },
+  { 
+    category: "Graphic Design", 
+    icon: <PenTool size={24}/>,
+    products: ["Design", "Illustration", "Logo", "Brand Book", "AI Generative", "Cartoon Created"] 
+  },
+  { 
+    category: "Digital Marketing", 
+    icon: <TrendingUp size={24}/>,
+    products: ["Google Ads", "Meta Ads", "Social Media Management", "SEO", "Webdesign", "Ecommerce", "AI Automation", "Analytics"] 
+  },
+  { 
+    category: "Car Wrap", 
+    icon: <Car size={24}/>,
+    products: ["Full Wrap", "Partial Wrap", "Lettering"] 
+  },
+  { 
+    category: "Illuminated Sign", 
+    icon: <Lightbulb size={24}/>,
+    products: ["LED", "Neon Flex"] 
+  },
+  { 
+    category: "Window Graphics", 
+    icon: <Maximize size={24}/>,
+    products: ["Perforated", "Vinyl", "Lettering", "Frosted"] 
+  },
+  { 
+    category: "Wall Graphics", 
+    icon: <ImageIcon size={24}/>,
+    products: ["Vinyl", "Wall Paper"] 
+  },
+  { 
+    category: "Outdoor Signs", 
+    icon: <Building size={24}/>,
+    products: ["Monuments", "Pole Signs", "Storefront Signs", "Plaques", "Yard Signs", "Real States Signs", "Banners", "Post & Panel Signs", "Light Box Signs", "3D Letters Illuminated", "Channel Letters"] 
+  },
+  { 
+    category: "Promotional Signs", 
+    icon: <Megaphone size={24}/>,
+    products: ["Trade Show", "POS Signs", "Pull-up Banner", "Floor Signs", "Backdrop", "Stands", "Booth Display"] 
+  },
+  { 
+    category: "Printing", 
+    icon: <Printer size={24}/>,
+    products: ["Brochure", "Business card", "Poster", "Hang door", "Menu", "Envelop", "Flyers", "Folders", "Tri-fold", "Labels"] 
+  }
 ];
+
+const ADMIN_PASSWORD = "admin"; 
 
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-production-v3'; 
+const appId = 'twokinp-site-final-production-v5'; // Versão Final v5
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -101,17 +150,9 @@ export default function App() {
       description: '', name: '', email: '', phone: '', fileUrl: ''
     });
 
-    const categoriesList = [
-      { id: 'wraps', name: 'Car Wrap', icon: <Car size={24}/>, products: ['Full Wrap', 'Partial Wrap', 'Lettering', 'Color Change', 'Commercial Fleet'] },
-      { id: 'illuminated', name: 'Illuminated', icon: <Lightbulb size={24}/>, products: ['Channel Letters', 'Light Box', 'Neon Flex', 'Backlit Signs'] },
-      { id: 'marketing', name: 'Marketing', icon: <TrendingUp size={24}/>, products: ['Google Ads', 'Social Media Management', 'SEO', 'Web Design', 'Branding'] },
-      { id: 'print', name: 'Print/Signs', icon: <Printer size={24}/>, products: ['Banners', 'Wall Graphics', 'Window Perf', 'Yard Signs', 'Flyers'] },
-      { id: 'outdoor', name: 'Outdoor', icon: <Building size={24}/>, products: ['Monument Signs', 'Pole Signs', 'Storefront', 'Pylon Signs'] },
-    ];
-
     const handleCategorySelect = (cat) => {
       setQCategory(cat);
-      setFormData({...formData, category: cat.name});
+      setFormData({...formData, category: cat.category});
       setStep(2); 
     };
 
@@ -149,11 +190,11 @@ export default function App() {
                 <div className="animate-in slide-in-from-right">
                   <h2 className="text-2xl font-bold mb-6 text-white"><span className="text-[#FFC107]">01.</span> Select Service</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {categoriesList.map(cat => (
-                      <button key={cat.id} onClick={() => handleCategorySelect(cat)}
+                    {SERVICES_DATA.map(cat => (
+                      <button key={cat.category} onClick={() => handleCategorySelect(cat)}
                         className="p-6 bg-gray-800 border border-gray-700 rounded-xl hover:border-[#FFC107] hover:bg-[#FFC107]/10 transition group text-left flex flex-col items-center">
                         <div className="text-[#FFC107] mb-3 group-hover:scale-110 transition">{cat.icon}</div>
-                        <h3 className="font-bold text-white text-sm">{cat.name}</h3>
+                        <h3 className="font-bold text-white text-sm">{cat.category}</h3>
                       </button>
                     ))}
                   </div>
@@ -163,11 +204,11 @@ export default function App() {
               {step === 2 && qCategory && (
                  <div className="animate-in slide-in-from-right">
                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
-                     <button onClick={() => setStep(1)} className="text-gray-400 hover:text-[#FFC107]"><ArrowRight className="rotate-180" size={24}/></button> <span className="text-[#FFC107]">02.</span> Details: {qCategory.name}
+                     <button onClick={() => setStep(1)} className="text-gray-400 hover:text-[#FFC107]"><ArrowRight className="rotate-180" size={24}/></button> <span className="text-[#FFC107]">02.</span> Details: {qCategory.category}
                    </h2>
                    <div className="grid md:grid-cols-2 gap-6">
                      <div>
-                       <label className="block text-gray-400 text-sm mb-2">Select Product Type</label>
+                       <label className="block text-gray-400 text-sm mb-2">Select Specific Product</label>
                        <select 
                         className="w-full bg-gray-800 p-3 rounded-xl text-white border border-gray-700 focus:border-[#FFC107] outline-none" 
                         value={formData.product}
@@ -211,11 +252,9 @@ export default function App() {
   // --- EFEITOS E LÓGICA ---
   useEffect(() => {
     if (!db) return;
-    // Carrega Produtos
     const unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
       setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-    // Carrega Banners
     const unsubBanners = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), (snapshot) => {
         const bData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (bData.length === 0) {
@@ -224,13 +263,11 @@ export default function App() {
            setBanners(bData);
         }
     });
-    // Carrega Configurações (CORREÇÃO APLICADA AQUI: 'settings' -> 'config')
     const unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), (docSnap) => {
         if (docSnap.exists()) {
             setSiteSettings({...DEFAULT_SETTINGS, ...docSnap.data()});
         }
     });
-
     return () => { unsubProducts(); unsubBanners(); unsubSettings(); };
   }, []);
 
@@ -253,9 +290,8 @@ export default function App() {
       if (!db || isSaving) return;
       setIsSaving(true);
       try {
-          // CORREÇÃO APLICADA AQUI TAMBÉM: 'settings' -> 'config'
           await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings);
-          alert("Settings Saved!");
+          alert("Settings & Footer Saved!");
       } catch (err) {
           alert("Error saving settings");
           console.error(err);
@@ -275,13 +311,8 @@ export default function App() {
     e.preventDefault(); 
     if (!db || isSaving) return; 
     
-    // Filtra imagens vazias
     const filteredImages = newProduct.images.filter(url => url && url.trim() !== '');
-    
-    if (filteredImages.length === 0) {
-        alert("Please add at least one valid image URL.");
-        return;
-    }
+    if (filteredImages.length === 0) { alert("Add at least one image"); return; }
 
     setIsSaving(true);
     try {
@@ -292,23 +323,13 @@ export default function App() {
           price: Number(newProduct.price) || 0, 
           createdAt: new Date().toISOString() 
       };
-
-      if (editingId) {
-          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', editingId), pData);
-      } else {
-          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), pData);
-      }
+      if (editingId) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', editingId), pData);
+      else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), pData);
       
       setNewProduct({ name: '', category: 'Car Wrap', price: '', description: '', images: ['', '', '', '', ''] }); 
       setEditingId(null);
-      alert(editingId ? "Project Updated!" : "Project Added Successfully!");
-      
-    } catch (error) {
-        console.error("Erro ao salvar:", error);
-        alert("Error saving project. Check console.");
-    } finally { 
-        setIsSaving(false); 
-    }
+      alert("Project Saved!");
+    } finally { setIsSaving(false); }
   };
 
   const handleDeleteProduct = async (id) => { if (!db || !window.confirm("Delete?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id)); };
@@ -351,7 +372,7 @@ export default function App() {
             <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
                 <button onClick={() => setAdminTab("projects")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "projects" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Projects</button>
                 <button onClick={() => setAdminTab("banners")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "banners" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Banners</button>
-                <button onClick={() => setAdminTab("settings")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "settings" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Company Settings</button>
+                <button onClick={() => setAdminTab("settings")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "settings" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Footer & Settings</button>
             </div>
 
             {/* TAB: BANNERS */}
@@ -387,12 +408,11 @@ export default function App() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                             <input placeholder="Project Name" className="p-4 bg-black border border-white/10 rounded-2xl text-sm outline-none text-white" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
                             <select className="p-4 bg-black border border-white/10 rounded-2xl text-sm outline-none cursor-pointer text-white" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}>
-                                {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
+                                {SERVICES_DATA.map(c => <option key={c.category} value={c.category}>{c.category}</option>)}
                             </select>
                             <input placeholder="Price (Optional)" type="number" className="p-4 bg-black border border-white/10 rounded-2xl text-sm outline-none text-white" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} />
                             </div>
                             
-                            {/* Área de Imagens Fixada */}
                             <div className="bg-black p-6 rounded-[2rem] border border-white/10">
                                 <label className="text-gray-400 text-xs uppercase font-bold mb-4 block">Image URLs (Paste links from imgbb, postimages, etc)</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -421,7 +441,6 @@ export default function App() {
                         </form>
                     </div>
                     
-                    {/* Lista de Projetos */}
                     <div className="bg-gray-900 rounded-[2rem] p-6 text-white border border-white/10 overflow-hidden shadow-sm">
                         <div className="max-h-[400px] overflow-y-auto">
                             <table className="w-full text-xs sm:text-sm">
@@ -446,20 +465,27 @@ export default function App() {
                 </div>
             )}
 
-            {/* TAB: SETTINGS */}
+            {/* TAB: SETTINGS (RODAPÉ EDITÁVEL) */}
             {adminTab === "settings" && (
                 <div className="bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><Settings className="w-5 h-5" /> Company Information</h2>
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><Settings className="w-5 h-5" /> Footer & Company Info</h2>
                     <form onSubmit={handleSaveSettings} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div><label className="text-gray-400 text-xs font-bold mb-2 block">Company Name</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.companyName} onChange={e => setSiteSettings({...siteSettings, companyName: e.target.value})} /></div>
                             <div><label className="text-gray-400 text-xs font-bold mb-2 block">Address (Footer)</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
+                            
                             <div><label className="text-gray-400 text-xs font-bold mb-2 block">WhatsApp / Phone</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.whatsapp} onChange={e => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
                             <div><label className="text-gray-400 text-xs font-bold mb-2 block">Email</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.email} onChange={e => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
-                            <div><label className="text-gray-400 text-xs font-bold mb-2 block">Instagram (@...)</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.instagram} onChange={e => setSiteSettings({...siteSettings, instagram: e.target.value})} /></div>
+                            
+                            {/* Mídias Sociais */}
+                            <div><label className="text-gray-400 text-xs font-bold mb-2 block">Instagram Link (Full URL)</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white placeholder-gray-600" placeholder="https://instagram.com/..." value={siteSettings.instagramUrl} onChange={e => setSiteSettings({...siteSettings, instagramUrl: e.target.value})} /></div>
+                            <div><label className="text-gray-400 text-xs font-bold mb-2 block">Facebook Link (Full URL)</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white placeholder-gray-600" placeholder="https://facebook.com/..." value={siteSettings.facebookUrl} onChange={e => setSiteSettings({...siteSettings, facebookUrl: e.target.value})} /></div>
+                            <div><label className="text-gray-400 text-xs font-bold mb-2 block">LinkedIn Link (Optional)</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white placeholder-gray-600" placeholder="https://linkedin.com/..." value={siteSettings.linkedinUrl} onChange={e => setSiteSettings({...siteSettings, linkedinUrl: e.target.value})} /></div>
+
+                            <div><label className="text-gray-400 text-xs font-bold mb-2 block">Copyright Text</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.copyright} onChange={e => setSiteSettings({...siteSettings, copyright: e.target.value})} /></div>
                             <div><label className="text-gray-400 text-xs font-bold mb-2 block">Badge Text (Slide)</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.badgeText} onChange={e => setSiteSettings({...siteSettings, badgeText: e.target.value})} /></div>
                         </div>
-                        <button type="submit" className="w-full bg-[#FFC107] text-black p-4 rounded-2xl font-black uppercase text-xs hover:bg-yellow-600">Save Settings</button>
+                        <button type="submit" className="w-full bg-[#FFC107] text-black p-4 rounded-2xl font-black uppercase text-xs hover:bg-yellow-600">Save Footer & Settings</button>
                     </form>
                 </div>
             )}
@@ -494,7 +520,8 @@ export default function App() {
         {/* FILTER CATEGORIES */}
         <div className="flex flex-col gap-6 mb-12">
           <div className="hidden sm:flex flex-wrap justify-center gap-2">
-            {CATEGORIES.map(cat => <button key={cat} onClick={() => setFilter(cat)} className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all ${filter === cat ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}>{cat}</button>)}
+            <button onClick={() => setFilter("All")} className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all ${filter === "All" ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}>All</button>
+            {SERVICES_DATA.map(cat => <button key={cat.category} onClick={() => setFilter(cat.category)} className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all ${filter === cat.category ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}>{cat.category}</button>)}
           </div>
           <div className="sm:hidden relative">
             <button onClick={() => setIsMobileCategoryMenuOpen(!isMobileCategoryMenuOpen)} className="w-full bg-gray-900 border border-white/10 p-4 rounded-2xl flex items-center justify-between font-black text-[12px] uppercase shadow-sm text-white">
@@ -503,7 +530,8 @@ export default function App() {
             </button>
             {isMobileCategoryMenuOpen && (
               <div className="absolute top-full left-0 right-0 mt-3 bg-gray-900 border border-white/10 rounded-[1.5rem] shadow-2xl z-50 py-3 animate-in slide-in-from-top-4">
-                {CATEGORIES.map(cat => <button key={cat} onClick={() => { setFilter(cat); setIsMobileCategoryMenuOpen(false); }} className={`w-full text-left px-6 py-4 text-[11px] font-black uppercase ${filter === cat ? 'text-[#FFC107]' : 'text-gray-400'}`}>{cat}</button>)}
+                <button onClick={() => { setFilter("All"); setIsMobileCategoryMenuOpen(false); }} className={`w-full text-left px-6 py-4 text-[11px] font-black uppercase ${filter === "All" ? 'text-[#FFC107]' : 'text-gray-400'}`}>All</button>
+                {SERVICES_DATA.map(cat => <button key={cat.category} onClick={() => { setFilter(cat.category); setIsMobileCategoryMenuOpen(false); }} className={`w-full text-left px-6 py-4 text-[11px] font-black uppercase ${filter === cat.category ? 'text-[#FFC107]' : 'text-gray-400'}`}>{cat.category}</button>)}
               </div>
             )}
           </div>
@@ -537,11 +565,15 @@ export default function App() {
       {/* FOOTER */}
       <footer className="bg-black text-white py-16 px-4 text-center mt-20 border-t border-white/10">
         <h2 className="text-3xl font-black uppercase mb-6 tracking-tighter italic">2<span className="text-[#FFC107]">KINP!</span></h2>
-        <div className="flex flex-col sm:flex-row justify-center gap-8 text-[11px] font-bold uppercase text-gray-400 mb-12">
-          <div className="flex items-center justify-center gap-2"><MapPin size={16} className="text-[#FFC107]" /> {siteSettings?.address}</div>
-          <div className="flex items-center justify-center gap-2"><Mail size={16} className="text-[#FFC107]" /> {siteSettings?.email}</div>
-          <div className="flex items-center justify-center gap-2"><Phone size={16} className="text-[#FFC107]" /> {siteSettings?.whatsapp}</div>
-          <div className="flex items-center justify-center gap-2"><Instagram size={16} className="text-[#FFC107]" /> {siteSettings?.instagram}</div>
+        <div className="flex flex-col sm:flex-row justify-center gap-8 text-[11px] font-bold uppercase text-gray-400 mb-12 flex-wrap">
+          {siteSettings?.address && <div className="flex items-center justify-center gap-2"><MapPin size={16} className="text-[#FFC107]" /> {siteSettings.address}</div>}
+          {siteSettings?.email && <a href={`mailto:${siteSettings.email}`} className="flex items-center justify-center gap-2 hover:text-white transition"><Mail size={16} className="text-[#FFC107]" /> {siteSettings.email}</a>}
+          {siteSettings?.whatsapp && <a href={`tel:${siteSettings.whatsapp}`} className="flex items-center justify-center gap-2 hover:text-white transition"><Phone size={16} className="text-[#FFC107]" /> {siteSettings.whatsapp}</a>}
+          
+          {/* Social Media Links Dinâmicos */}
+          {siteSettings?.instagramUrl && <a href={siteSettings.instagramUrl} target="_blank" className="flex items-center justify-center gap-2 hover:text-[#E1306C] transition"><Instagram size={16} className="text-[#FFC107]" /> Instagram</a>}
+          {siteSettings?.facebookUrl && <a href={siteSettings.facebookUrl} target="_blank" className="flex items-center justify-center gap-2 hover:text-[#1877F2] transition"><Facebook size={16} className="text-[#FFC107]" /> Facebook</a>}
+          {siteSettings?.linkedinUrl && <a href={siteSettings.linkedinUrl} target="_blank" className="flex items-center justify-center gap-2 hover:text-[#0A66C2] transition"><Linkedin size={16} className="text-[#FFC107]" /> LinkedIn</a>}
         </div>
         <p className="text-gray-800 text-[10px] uppercase tracking-[0.3em] font-bold">© {new Date().getFullYear()} {siteSettings?.copyright}</p>
       </footer>
