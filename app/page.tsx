@@ -8,7 +8,7 @@ import {
   Mail, Phone, Award, Pencil, PlayCircle, Youtube, ChevronLeft, ChevronRight,
   Loader2, Menu, ArrowRight, MessageSquare, Car, Lightbulb, Printer, Building,
   PlusCircle, Trash2, Settings, Image as ImageIcon, Globe, Instagram, Facebook, Linkedin,
-  Palette, PenTool, Megaphone, Maximize
+  Palette, PenTool, Megaphone, Maximize, FileText, User
 } from 'lucide-react';
 
 // Firebase Imports
@@ -99,7 +99,7 @@ const ADMIN_PASSWORD = "admin";
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-production-v6'; 
+const appId = 'twokinp-site-final-production-v7'; // Versão v7 com Leads
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -109,8 +109,7 @@ try {
   console.error("Erro ao conectar no Firebase", e); 
 }
 
-// --- COMPONENTE MODAL DE ORÇAMENTO (MEMOIZADO) ---
-// Isso garante que ele não seja destruído quando o pai atualiza
+// --- COMPONENTE MODAL DE ORÇAMENTO (ENVIO REAL) ---
 const QuoteModal = React.memo(({ onClose }) => {
   const [step, setStep] = useState(1);
   const [qCategory, setQCategory] = useState(null);
@@ -128,12 +127,23 @@ const QuoteModal = React.memo(({ onClose }) => {
   };
 
   const handleSubmit = async () => {
+    if (!db) return alert("System Offline");
     setLoading(true);
-    setTimeout(() => { 
-      setSuccess(true); 
-      setLoading(false);
-      setTimeout(() => onClose(), 3000);
-    }, 1500);
+    try {
+        // ENVIO REAL PARA O FIREBASE
+        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), {
+            ...formData,
+            status: 'New',
+            createdAt: new Date().toISOString()
+        });
+        setSuccess(true); 
+        setTimeout(() => onClose(), 3000);
+    } catch (err) {
+        console.error(err);
+        alert("Error sending request. Try again.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
@@ -145,7 +155,7 @@ const QuoteModal = React.memo(({ onClose }) => {
            <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in">
              <CheckCircle2 className="text-[#FFC107] w-20 h-20 mb-4" />
              <h2 className="text-3xl font-bold mb-2 text-white">Received!</h2>
-             <p className="text-gray-400">We will contact you shortly.</p>
+             <p className="text-gray-400">We received your request. Check your email soon.</p>
            </div>
         ) : (
           <>
@@ -224,6 +234,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [leads, setLeads] = useState([]); // Novo Estado para LEADS
   const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
   
   // Estados de UI
@@ -261,9 +272,13 @@ export default function App() {
   // --- EFEITOS E LÓGICA ---
   useEffect(() => {
     if (!db) return;
+    
+    // 1. Produtos
     const unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
       setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
+    
+    // 2. Banners
     const unsubBanners = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), (snapshot) => {
         const bData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (bData.length === 0) {
@@ -272,20 +287,30 @@ export default function App() {
            setBanners(bData);
         }
     });
+
+    // 3. Settings
     const unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), (docSnap) => {
         if (docSnap.exists()) {
             setSiteSettings({...DEFAULT_SETTINGS, ...docSnap.data()});
         }
     });
-    return () => { unsubProducts(); unsubBanners(); unsubSettings(); };
+
+    // 4. LEADS (Novo!)
+    const unsubLeads = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), (snapshot) => {
+        const lData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Ordenar por data (mais recente primeiro)
+        lData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLeads(lData);
+    });
+
+    return () => { unsubProducts(); unsubBanners(); unsubSettings(); unsubLeads(); };
   }, []);
 
-  // --- CORREÇÃO DO TIMER (PAUSA SE O MODAL ESTIVER ABERTO) ---
   useEffect(() => {
-    if (banners.length <= 1 || isQuoteModalOpen) return; // Se modal aberto, PAUSA o timer
+    if (banners.length <= 1 || isQuoteModalOpen) return; 
     const timer = setInterval(() => setCurrentSlide(prev => (prev + 1) % banners.length), 5000);
     return () => clearInterval(timer);
-  }, [banners, isQuoteModalOpen]); // Recria o timer se o estado do modal mudar
+  }, [banners, isQuoteModalOpen]); 
 
   useEffect(() => {
     if (!auth) return;
@@ -316,6 +341,8 @@ export default function App() {
     finally { setIsSaving(false); }
   };
   const handleDeleteBanner = async (id) => { if (!db || id === 'default' || !window.confirm("Delete?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id)); };
+
+  const handleDeleteLead = async (id) => { if (!db || !window.confirm("Archive this lead?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leads', id)); };
 
   const handleAddProduct = async (e) => {
     e.preventDefault(); 
@@ -404,9 +431,57 @@ export default function App() {
           <div className="mb-12 animate-in slide-in-from-top-6 duration-700 text-left">
             <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
                 <button onClick={() => setAdminTab("projects")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "projects" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Projects</button>
+                <button onClick={() => setAdminTab("quotes")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "quotes" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Quotes (Leads)</button>
                 <button onClick={() => setAdminTab("banners")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "banners" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Banners</button>
                 <button onClick={() => setAdminTab("settings")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "settings" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Footer & Settings</button>
             </div>
+
+            {/* TAB: QUOTES / LEADS (NOVO!) */}
+            {adminTab === "quotes" && (
+                <div className="bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><FileText className="w-5 h-5" /> Recent Quote Requests</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-black/50 text-[#FFC107] uppercase text-[10px] font-black">
+                                <tr>
+                                    <th className="p-4">Date</th>
+                                    <th className="p-4">Customer</th>
+                                    <th className="p-4">Service / Product</th>
+                                    <th className="p-4">Qty</th>
+                                    <th className="p-4">Contact</th>
+                                    <th className="p-4">Notes</th>
+                                    <th className="p-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/10">
+                                {leads.length === 0 ? (
+                                    <tr><td colSpan="7" className="p-8 text-center text-gray-500">No leads found yet.</td></tr>
+                                ) : (
+                                    leads.map(lead => (
+                                        <tr key={lead.id} className="hover:bg-white/5 transition">
+                                            <td className="p-4 text-gray-400 text-xs whitespace-nowrap">{new Date(lead.createdAt).toLocaleDateString()}</td>
+                                            <td className="p-4 font-bold"><div className="flex items-center gap-2"><User size={14}/> {lead.name}</div></td>
+                                            <td className="p-4">
+                                                <span className="block text-[#FFC107] text-[10px] uppercase font-bold">{lead.category}</span>
+                                                {lead.product}
+                                            </td>
+                                            <td className="p-4">{lead.quantity}</td>
+                                            <td className="p-4">
+                                                <div className="text-xs text-gray-300">{lead.email}</div>
+                                                <div className="text-xs text-gray-500">{lead.phone}</div>
+                                            </td>
+                                            <td className="p-4 text-xs text-gray-400 max-w-xs truncate">{lead.description}</td>
+                                            <td className="p-4">
+                                                <button onClick={() => handleDeleteLead(lead.id)} className="text-gray-500 hover:text-red-500 p-2"><Trash2 size={16}/></button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* TAB: BANNERS */}
             {adminTab === "banners" && (
