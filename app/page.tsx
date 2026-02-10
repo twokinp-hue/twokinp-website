@@ -40,56 +40,56 @@ const DEFAULT_SETTINGS = {
   badgeText: "PREMIUM WRAPS" 
 };
 
-// --- SUA LISTA DE CATEGORIAS (DEFINITIVA) ---
+// --- LISTA DE CATEGORIAS ---
 const SERVICES_DATA = [
   { 
     category: "Art Design", 
-    icon: <Palette size={24}/>,
+    icon: <Palette size={20}/>,
     products: ["Canvas Print", "Acrylic Print", "T-Shirt TDF"] 
   },
   { 
     category: "Graphic Design", 
-    icon: <PenTool size={24}/>,
+    icon: <PenTool size={20}/>,
     products: ["Design", "Illustration", "Logo", "Brand Book", "AI Generative", "Cartoon Created"] 
   },
   { 
     category: "Digital Marketing", 
-    icon: <TrendingUp size={24}/>,
+    icon: <TrendingUp size={20}/>,
     products: ["Google Ads", "Meta Ads", "Social Media Management", "SEO", "Webdesign", "Ecommerce", "AI Automation", "Analytics"] 
   },
   { 
     category: "Car Wrap", 
-    icon: <Car size={24}/>,
+    icon: <Car size={20}/>,
     products: ["Full Wrap", "Partial Wrap", "Lettering"] 
   },
   { 
     category: "Illuminated Sign", 
-    icon: <Lightbulb size={24}/>,
+    icon: <Lightbulb size={20}/>,
     products: ["LED", "Neon Flex"] 
   },
   { 
     category: "Window Graphics", 
-    icon: <Maximize size={24}/>,
+    icon: <Maximize size={20}/>,
     products: ["Perforated", "Vinyl", "Lettering", "Frosted"] 
   },
   { 
     category: "Wall Graphics", 
-    icon: <ImageIcon size={24}/>,
+    icon: <ImageIcon size={20}/>,
     products: ["Vinyl", "Wall Paper"] 
   },
   { 
     category: "Outdoor Signs", 
-    icon: <Building size={24}/>,
+    icon: <Building size={20}/>,
     products: ["Monuments", "Pole Signs", "Storefront Signs", "Plaques", "Yard Signs", "Real States Signs", "Banners", "Post & Panel Signs", "Light Box Signs", "3D Letters Illuminated", "Channel Letters"] 
   },
   { 
     category: "Promotional Signs", 
-    icon: <Megaphone size={24}/>,
+    icon: <Megaphone size={20}/>,
     products: ["Trade Show", "POS Signs", "Pull-up Banner", "Floor Signs", "Backdrop", "Stands", "Booth Display"] 
   },
   { 
     category: "Printing", 
-    icon: <Printer size={24}/>,
+    icon: <Printer size={20}/>,
     products: ["Brochure", "Business card", "Poster", "Hang door", "Menu", "Envelop", "Flyers", "Folders", "Tri-fold", "Labels"] 
   }
 ];
@@ -99,7 +99,7 @@ const ADMIN_PASSWORD = "admin";
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-production-v5'; // Versão Final v5
+const appId = 'twokinp-site-final-production-v5'; 
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -122,7 +122,6 @@ export default function App() {
   const [currentProductImgIdx, setCurrentProductImgIdx] = useState(0); 
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isMobileCategoryMenuOpen, setIsMobileCategoryMenuOpen] = useState(false);
   
   // Estados do Admin
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -366,6 +365,30 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         
+        {/* --- FILTER CATEGORIES (MOVIDO PARA O TOPO) --- */}
+        {!isAdminMode && (
+          <div className="flex flex-col gap-6 mb-8 animate-in slide-in-from-top-4">
+            {/* Scroll Horizontal Moderno (Funciona em Desktop e Mobile) */}
+            <div className="flex overflow-x-auto gap-3 pb-4 scrollbar-hide">
+              <button 
+                onClick={() => setFilter("All")} 
+                className={`min-w-[80px] h-14 px-2 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all flex items-center justify-center text-center ${filter === "All" ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
+              >
+                ALL
+              </button>
+              {SERVICES_DATA.map(cat => (
+                <button 
+                  key={cat.category} 
+                  onClick={() => setFilter(cat.category)} 
+                  className={`min-w-[90px] h-14 px-2 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all flex items-center justify-center text-center leading-3 whitespace-normal ${filter === cat.category ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
+                >
+                  {cat.category}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* --- ADMIN DASHBOARD --- */}
         {isAdminMode && (
           <div className="mb-12 animate-in slide-in-from-top-6 duration-700 text-left">
@@ -516,26 +539,6 @@ export default function App() {
             </div>
           </div>
         )}
-
-        {/* FILTER CATEGORIES */}
-        <div className="flex flex-col gap-6 mb-12">
-          <div className="hidden sm:flex flex-wrap justify-center gap-2">
-            <button onClick={() => setFilter("All")} className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all ${filter === "All" ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}>All</button>
-            {SERVICES_DATA.map(cat => <button key={cat.category} onClick={() => setFilter(cat.category)} className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all ${filter === cat.category ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}>{cat.category}</button>)}
-          </div>
-          <div className="sm:hidden relative">
-            <button onClick={() => setIsMobileCategoryMenuOpen(!isMobileCategoryMenuOpen)} className="w-full bg-gray-900 border border-white/10 p-4 rounded-2xl flex items-center justify-between font-black text-[12px] uppercase shadow-sm text-white">
-              <div className="flex items-center gap-3"><Menu className="w-4 h-4 text-[#FFC107]" /> Filter: <span className="text-[#FFC107]">{filter}</span></div>
-              <ChevronDown className={`w-5 h-5 transition-transform ${isMobileCategoryMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {isMobileCategoryMenuOpen && (
-              <div className="absolute top-full left-0 right-0 mt-3 bg-gray-900 border border-white/10 rounded-[1.5rem] shadow-2xl z-50 py-3 animate-in slide-in-from-top-4">
-                <button onClick={() => { setFilter("All"); setIsMobileCategoryMenuOpen(false); }} className={`w-full text-left px-6 py-4 text-[11px] font-black uppercase ${filter === "All" ? 'text-[#FFC107]' : 'text-gray-400'}`}>All</button>
-                {SERVICES_DATA.map(cat => <button key={cat.category} onClick={() => { setFilter(cat.category); setIsMobileCategoryMenuOpen(false); }} className={`w-full text-left px-6 py-4 text-[11px] font-black uppercase ${filter === cat.category ? 'text-[#FFC107]' : 'text-gray-400'}`}>{cat.category}</button>)}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* PORTFOLIO GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
