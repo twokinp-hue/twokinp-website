@@ -136,7 +136,18 @@ export default function App() {
   });
   const [newBanner, setNewBanner] = useState({ title: '', subtitle: '', image: '', active: true });
 
+  // REFS PARA SCROLL AUTOMÁTICO
   const searchInputRef = useRef(null);
+  const portfolioRef = useRef(null);
+
+  // --- FUNÇÃO DE CLIQUE NO FILTRO COM SCROLL ---
+  const handleFilterClick = (categoryName) => {
+    setFilter(categoryName);
+    // Rola até a galeria com um pequeno ajuste para o cabeçalho não cobrir
+    if (portfolioRef.current) {
+        portfolioRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // --- MODAL DE ORÇAMENTO ---
   const QuoteModal = () => {
@@ -348,7 +359,7 @@ export default function App() {
       
       {/* HEADER */}
       <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-white/10 h-20 flex justify-between items-center px-4 sm:px-8 shadow-sm">
-        <div className="flex flex-col cursor-pointer" onClick={() => {setFilter("All"); setIsAdminMode(false);}}>
+        <div className="flex flex-col cursor-pointer" onClick={() => {setFilter("All"); window.scrollTo({top:0, behavior:'smooth'})}}>
           <h1 className="text-xl sm:text-2xl font-black italic tracking-tighter uppercase">2<span className="text-[#FFC107]">KINP!</span></h1>
         </div>
         <div className="hidden md:flex flex-1 max-w-md mx-8 relative">
@@ -365,21 +376,21 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         
-        {/* --- FILTER CATEGORIES (NO TOPO - AJUSTADO) --- */}
+        {/* --- FILTER CATEGORIES (NO TOPO) --- */}
         {!isAdminMode && (
           <div className="flex flex-col gap-6 mb-8 animate-in slide-in-from-top-4">
             <div className="flex overflow-x-auto gap-2 pb-4 scrollbar-hide">
               <button 
-                onClick={() => setFilter("All")} 
-                className={`w-16 h-10 px-1 rounded-lg text-[9px] font-black uppercase tracking-tight leading-none border transition-all flex items-center justify-center text-center ${filter === "All" ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
+                onClick={() => handleFilterClick("All")} 
+                className={`min-w-[64px] h-10 px-1 rounded-lg text-[9px] font-black uppercase tracking-tight leading-none border transition-all flex items-center justify-center text-center ${filter === "All" ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
               >
                 ALL
               </button>
               {SERVICES_DATA.map(cat => (
                 <button 
                   key={cat.category} 
-                  onClick={() => setFilter(cat.category)} 
-                  className={`w-24 h-10 px-1 rounded-lg text-[9px] font-black uppercase tracking-tight leading-none border transition-all flex items-center justify-center text-center whitespace-normal ${filter === cat.category ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
+                  onClick={() => handleFilterClick(cat.category)} 
+                  className={`min-w-[96px] h-10 px-1 rounded-lg text-[9px] font-black uppercase tracking-tight leading-none border transition-all flex items-center justify-center text-center whitespace-normal ${filter === cat.category ? "bg-[#FFC107] text-black border-[#FFC107] scale-105 shadow-md" : "bg-gray-900 text-gray-500 border-white/5 hover:border-[#FFC107]"}`}
                 >
                   {cat.category}
                 </button>
@@ -540,7 +551,7 @@ export default function App() {
         )}
 
         {/* PORTFOLIO GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+        <div ref={portfolioRef} className="scroll-mt-32 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
           {filteredProducts.map(product => (
             <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentProductImgIdx(0); }} className="group bg-gray-900 rounded-[2rem] border border-white/5 overflow-hidden hover:border-[#FFC107]/50 transition-all cursor-pointer relative aspect-[4/5] sm:aspect-square">
               <img src={product.images ? product.images[0] : product.image} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-70 group-hover:opacity-100" alt={product.name} />
