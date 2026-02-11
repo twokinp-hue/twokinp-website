@@ -8,7 +8,7 @@ import {
   Mail, Phone, Award, Pencil, PlayCircle, Youtube, ChevronLeft, ChevronRight,
   Loader2, Menu, ArrowRight, MessageSquare, Car, Lightbulb, Printer, Building,
   PlusCircle, Trash2, Settings, Image as ImageIcon, Globe, Instagram, Facebook, Linkedin,
-  Palette, PenTool, Megaphone, Maximize, FileText, User
+  Palette, PenTool, Megaphone, Maximize, FileText, User, RefreshCw
 } from 'lucide-react';
 
 // Firebase Imports
@@ -135,7 +135,7 @@ const QuoteModal = React.memo(({ onClose }) => {
         "Customer Name": formData.name,
         "Phone": formData.phone,
         "Email": formData.email,
-        "Location": "Website Form", // Padronizado
+        "Location": "Website Form",
         "Category": formData.category,
         "Product": formData.product,
         "Dimensions": (formData.width && formData.height) ? `${formData.width}x${formData.height}` : "N/A",
@@ -147,15 +147,13 @@ const QuoteModal = React.memo(({ onClose }) => {
 
     try {
         // 2. Envia para o Webhook do N8N (Produção)
-        // O modo 'no-cors' é usado para evitar bloqueios de navegador se o n8n não retornar cabeçalhos CORS
-        // Nota: Em 'no-cors' não sabemos se deu erro 400/500, mas o dado é enviado.
         await fetch('https://n8n.twokinp.cloud/webhook/pedido-site-v2', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(n8nData)
         });
 
-        // 3. Salva Backup no Firebase (Segurança)
+        // 3. Salva Backup no Firebase
         if (db) {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), {
                 ...formData,
@@ -168,9 +166,8 @@ const QuoteModal = React.memo(({ onClose }) => {
         setTimeout(() => onClose(), 3000);
 
     } catch (error) {
-        console.error("Erro no envio:", error);
-        // Mesmo se der erro no fetch, mostramos sucesso se salvou no firebase ou para não frustrar o user
-        // (O n8n pode estar offline, mas o lead fica salvo no Admin)
+        console.error("Erro envio:", error);
+        // Mesmo com erro no N8N, salva no firebase e mostra sucesso para não frustrar o cliente
         setSuccess(true);
         setTimeout(() => onClose(), 3000);
     } finally {
@@ -284,7 +281,10 @@ export default function App() {
   const [adminTab, setAdminTab] = useState("projects"); 
   const [isSaving, setIsSaving] = useState(false);
   
-  const [editingId, setEditingId] = useState(null);
+  // Estados de Edição (Admin)
+  const [editingId, setEditingId] = useState(null); // ID do produto sendo editado
+  const [editingBannerId, setEditingBannerId] = useState(null); // ID do banner sendo editado
+
   const [newProduct, setNewProduct] = useState({ 
     name: '', category: 'Car Wrap', price: '', description: '', images: ['', '', '', '', ''] 
   });
@@ -324,7 +324,6 @@ export default function App() {
         }
     });
 
-    // CARREGA OS LEADS NO ADMIN (BACKUP)
     const unsubLeads = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), (snapshot) => {
         const lData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         lData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -363,15 +362,38 @@ export default function App() {
       }
   }
 
+  // --- BANNER LOGIC (AGORA COM UPDATE) ---
   const handleAddBanner = async (e) => {
     e.preventDefault(); if (!db || isSaving) return; setIsSaving(true);
-    try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), { ...newBanner, createdAt: new Date().toISOString() }); setNewBanner({ title: '', subtitle: '', image: '', active: true }); } 
-    finally { setIsSaving(false); }
+    try { 
+        if (editingBannerId) {
+            // Update Existing Banner
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', editingBannerId), { ...newBanner });
+            setEditingBannerId(null);
+        } else {
+            // Create New Banner
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), { ...newBanner, createdAt: new Date().toISOString() }); 
+        }
+        setNewBanner({ title: '', subtitle: '', image: '', active: true }); 
+    } finally { setIsSaving(false); }
   };
+
+  const handleEditBannerClick = (banner) => {
+      setNewBanner(banner);
+      setEditingBannerId(banner.id);
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll para o form
+  };
+
+  const handleCancelBannerEdit = () => {
+      setNewBanner({ title: '', subtitle: '', image: '', active: true });
+      setEditingBannerId(null);
+  };
+
   const handleDeleteBanner = async (id) => { if (!db || id === 'default' || !window.confirm("Delete?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', id)); };
 
   const handleDeleteLead = async (id) => { if (!db || !window.confirm("Delete this lead?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leads', id)); };
 
+  // --- PRODUCT LOGIC ---
   const handleAddProduct = async (e) => {
     e.preventDefault(); 
     if (!db || isSaving) return; 
@@ -395,6 +417,11 @@ export default function App() {
       setEditingId(null);
       alert("Project Saved!");
     } finally { setIsSaving(false); }
+  };
+
+  const handleCancelProductEdit = () => {
+      setNewProduct({ name: '', category: 'Car Wrap', price: '', description: '', images: ['', '', '', '', ''] });
+      setEditingId(null);
   };
 
   const handleDeleteProduct = async (id) => { if (!db || !window.confirm("Delete?")) return; await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id)); };
@@ -459,7 +486,7 @@ export default function App() {
           <div className="mb-12 animate-in slide-in-from-top-6 duration-700 text-left">
             <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
                 <button onClick={() => setAdminTab("projects")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "projects" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Projects</button>
-                <button onClick={() => setAdminTab("quotes")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "quotes" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>QUOTES (BACKUP)</button>
+                <button onClick={() => setAdminTab("quotes")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "quotes" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>QUOTES (LEADS)</button>
                 <button onClick={() => setAdminTab("banners")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "banners" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Banners</button>
                 <button onClick={() => setAdminTab("settings")} className={`px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap ${adminTab === "settings" ? "bg-[#FFC107] text-black" : "bg-gray-900 text-gray-400"}`}>Footer & Settings</button>
             </div>
@@ -509,35 +536,54 @@ export default function App() {
                 </div>
             )}
 
-            {/* TAB: BANNERS */}
+            {/* TAB: BANNERS (AGORA COM EDITAR) */}
             {adminTab === "banners" && (
                 <div className="bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><ImageIcon className="w-5 h-5" /> Slideshow Manager</h2>
+                <h2 className={`text-xl font-bold mb-6 flex items-center gap-3 uppercase italic tracking-tighter ${editingBannerId ? 'text-blue-500' : 'text-[#FFC107]'}`}>
+                    {editingBannerId ? <Pencil className="w-5 h-5" /> : <ImageIcon className="w-5 h-5" />} 
+                    {editingBannerId ? "Edit Slide" : "Slideshow Manager"}
+                </h2>
+                
                 <form onSubmit={handleAddBanner} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     <input placeholder="Title (e.g. VISUAL IMPACT)" className="p-4 bg-black/50 border border-white/10 rounded-2xl text-sm text-white outline-none" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} required />
                     <input placeholder="Image Link (https://...)" className="p-4 bg-black/50 border border-white/10 rounded-2xl text-sm text-white outline-none" value={newBanner.image} onChange={e => setNewBanner({...newBanner, image: e.target.value})} />
                     <textarea placeholder="Subtitle" className="md:col-span-2 p-4 bg-black/50 border border-white/10 rounded-2xl text-sm h-20 text-white outline-none" value={newBanner.subtitle} onChange={e => setNewBanner({...newBanner, subtitle: e.target.value})} required />
-                    <button type="submit" className="md:col-span-2 bg-[#FFC107] text-black p-4 rounded-2xl font-black uppercase text-xs hover:bg-yellow-600">Add Slide</button>
+                    
+                    <button type="submit" className={`md:col-span-2 p-4 rounded-2xl font-black uppercase text-xs transition ${editingBannerId ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-[#FFC107] text-black hover:bg-yellow-600'}`}>
+                        {editingBannerId ? "Update Slide" : "Add Slide"}
+                    </button>
+                    
+                    {/* Botão Cancelar Edição */}
+                    {editingBannerId && (
+                        <button type="button" onClick={handleCancelBannerEdit} className="md:col-span-2 p-3 bg-red-500/20 text-red-500 rounded-xl text-xs font-bold hover:bg-red-500 hover:text-white transition">
+                            Cancel Editing
+                        </button>
+                    )}
                 </form>
+
                 <div className="space-y-2">
                     {banners.map(b => (
-                    <div key={b.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                    <div key={b.id} className={`flex items-center justify-between p-4 rounded-2xl border transition ${editingBannerId === b.id ? 'bg-blue-500/10 border-blue-500' : 'bg-white/5 border-white/10'}`}>
                         <div className="flex items-center gap-4">
                         {b.image && <img src={b.image} className="w-12 h-8 object-cover rounded" />}
                         <p className="font-bold text-sm">{b.title}</p>
                         </div>
-                        {!b.isDefault && <button onClick={() => handleDeleteBanner(b.id)} className="text-white/20 hover:text-red-500 p-2"><Trash2 size={18} /></button>}
+                        <div className="flex gap-2">
+                            <button onClick={() => handleEditBannerClick(b)} className="text-gray-400 hover:text-blue-500 p-2 bg-black rounded-xl"><Pencil size={16} /></button>
+                            {!b.isDefault && <button onClick={() => handleDeleteBanner(b.id)} className="text-gray-400 hover:text-red-500 p-2 bg-black rounded-xl"><Trash2 size={16} /></button>}
+                        </div>
                     </div>
                     ))}
                 </div>
                 </div>
             )}
 
-            {/* TAB: PROJECTS */}
+            {/* TAB: PROJECTS (AGORA COM CANCELAR EDIÇÃO) */}
             {adminTab === "projects" && (
                 <div className="space-y-8">
                     <div className={`bg-gray-900 border-2 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl transition-all ${editingId ? 'border-blue-500' : 'border-white/5'}`}>
                         <h2 className={`text-xl font-black italic uppercase tracking-tighter mb-8 flex items-center gap-2 ${editingId ? 'text-blue-500' : 'text-[#FFC107]'}`}>{editingId ? <Pencil className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />} {editingId ? "Edit Project" : "Add New Project"}</h2>
+                        
                         <form onSubmit={handleAddProduct} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                             <input placeholder="Project Name" className="p-4 bg-black border border-white/10 rounded-2xl text-sm outline-none text-white" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
@@ -569,9 +615,17 @@ export default function App() {
                             </div>
 
                             <textarea placeholder="Description" className="w-full p-4 bg-black border border-white/10 rounded-2xl h-24 text-sm outline-none text-white" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} required />
+                            
                             <button type="submit" disabled={isSaving} className={`w-full py-4 rounded-[1.5rem] font-black uppercase text-xs text-white shadow-xl transition-all ${editingId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-[#FFC107] text-black hover:bg-yellow-600'}`}>
                                 {isSaving ? "Saving..." : (editingId ? "Update Project" : "Save Project")}
                             </button>
+
+                            {/* Botão Cancelar Edição para Projetos */}
+                            {editingId && (
+                                <button type="button" onClick={handleCancelProductEdit} className="w-full p-3 bg-red-500/20 text-red-500 rounded-[1.5rem] text-xs font-bold hover:bg-red-500 hover:text-white transition">
+                                    Cancel Editing
+                                </button>
+                            )}
                         </form>
                     </div>
                     
@@ -580,7 +634,7 @@ export default function App() {
                             <table className="w-full text-xs sm:text-sm">
                             <tbody className="divide-y divide-white/10">
                                 {products.map(p => (
-                                <tr key={p.id} className="group hover:bg-white/5 transition-colors">
+                                <tr key={p.id} className={`group transition-colors ${editingId === p.id ? 'bg-blue-500/10' : 'hover:bg-white/5'}`}>
                                     <td className="py-4 px-2 font-bold text-left flex items-center gap-3">
                                         <img src={p.image} className="w-10 h-10 rounded-lg object-cover bg-gray-800" />
                                         {p.name}
