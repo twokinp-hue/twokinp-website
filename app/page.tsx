@@ -8,7 +8,7 @@ import {
   Mail, Phone, Award, Pencil, PlayCircle, Youtube, ChevronLeft, ChevronRight,
   Loader2, Menu, ArrowRight, MessageSquare, Car, Lightbulb, Printer, Building,
   PlusCircle, Trash2, Settings, Image as ImageIcon, Globe, Instagram, Facebook, Linkedin,
-  Palette, PenTool, Megaphone, Maximize, FileText, User, RefreshCw
+  Palette, PenTool, Megaphone, Maximize, FileText, User, RefreshCw, Key
 } from 'lucide-react';
 
 // Firebase Imports
@@ -37,7 +37,8 @@ const DEFAULT_SETTINGS = {
   facebookUrl: "https://facebook.com",
   linkedinUrl: "",
   copyright: "Twokinp Agency LLC. All Rights Reserved.",
-  badgeText: "PREMIUM WRAPS" 
+  badgeText: "PREMIUM WRAPS",
+  adminPassword: "admin" // Senha padrão inicial
 };
 
 // --- LISTA DE CATEGORIAS ---
@@ -93,8 +94,6 @@ const SERVICES_DATA = [
     products: ["Brochure", "Business card", "Poster", "Hang door", "Menu", "Envelop", "Flyers", "Folders", "Tri-fold", "Labels"] 
   }
 ];
-
-const ADMIN_PASSWORD = "admin"; 
 
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
@@ -167,7 +166,6 @@ const QuoteModal = React.memo(({ onClose }) => {
 
     } catch (error) {
         console.error("Erro envio:", error);
-        // Mesmo com erro no N8N, salva no firebase e mostra sucesso para não frustrar o cliente
         setSuccess(true);
         setTimeout(() => onClose(), 3000);
     } finally {
@@ -282,8 +280,8 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   
   // Estados de Edição (Admin)
-  const [editingId, setEditingId] = useState(null); // ID do produto sendo editado
-  const [editingBannerId, setEditingBannerId] = useState(null); // ID do banner sendo editado
+  const [editingId, setEditingId] = useState(null); 
+  const [editingBannerId, setEditingBannerId] = useState(null); 
 
   const [newProduct, setNewProduct] = useState({ 
     name: '', category: 'Car Wrap', price: '', description: '', images: ['', '', '', '', ''] 
@@ -353,7 +351,7 @@ export default function App() {
       setIsSaving(true);
       try {
           await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings);
-          alert("Settings & Footer Saved!");
+          alert("Settings Saved! Password Updated.");
       } catch (err) {
           alert("Error saving settings");
           console.error(err);
@@ -362,16 +360,14 @@ export default function App() {
       }
   }
 
-  // --- BANNER LOGIC (AGORA COM UPDATE) ---
+  // --- BANNER LOGIC ---
   const handleAddBanner = async (e) => {
     e.preventDefault(); if (!db || isSaving) return; setIsSaving(true);
     try { 
         if (editingBannerId) {
-            // Update Existing Banner
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', editingBannerId), { ...newBanner });
             setEditingBannerId(null);
         } else {
-            // Create New Banner
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), { ...newBanner, createdAt: new Date().toISOString() }); 
         }
         setNewBanner({ title: '', subtitle: '', image: '', active: true }); 
@@ -381,7 +377,7 @@ export default function App() {
   const handleEditBannerClick = (banner) => {
       setNewBanner(banner);
       setEditingBannerId(banner.id);
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll para o form
+      window.scrollTo({ top: 0, behavior: 'smooth' }); 
   };
 
   const handleCancelBannerEdit = () => {
@@ -428,7 +424,15 @@ export default function App() {
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) { setIsAdminMode(true); setIsPasswordModalOpen(false); setPasswordInput(""); } else { alert("Wrong Password"); }
+    // Verifica a senha salva no DB ou a padrão
+    const currentPass = siteSettings.adminPassword || "admin";
+    if (passwordInput === currentPass) { 
+        setIsAdminMode(true); 
+        setIsPasswordModalOpen(false); 
+        setPasswordInput(""); 
+    } else { 
+        alert("Wrong Password"); 
+    }
   };
 
   const filteredProducts = useMemo(() => {
@@ -659,6 +663,17 @@ export default function App() {
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#FFC107] uppercase italic tracking-tighter"><Settings className="w-5 h-5" /> Footer & Company Info</h2>
                     <form onSubmit={handleSaveSettings} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* --- CAMPO NOVO DE SENHA --- */}
+                            <div className="md:col-span-2 bg-blue-900/20 p-4 rounded-xl border border-blue-500/30">
+                                <label className="text-blue-400 text-xs font-bold mb-2 flex items-center gap-2"><Key size={14}/> Admin Password (Change this to secure your dashboard)</label>
+                                <input 
+                                    className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white focus:border-blue-500 transition" 
+                                    value={siteSettings.adminPassword || ""} 
+                                    onChange={e => setSiteSettings({...siteSettings, adminPassword: e.target.value})} 
+                                    placeholder="Enter new password..."
+                                />
+                            </div>
+
                             <div><label className="text-gray-400 text-xs font-bold mb-2 block">Company Name</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.companyName} onChange={e => setSiteSettings({...siteSettings, companyName: e.target.value})} /></div>
                             <div><label className="text-gray-400 text-xs font-bold mb-2 block">Address (Footer)</label><input className="w-full p-4 bg-black border border-white/10 rounded-2xl text-white" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
                             
@@ -753,7 +768,7 @@ export default function App() {
             <div className="w-20 h-20 bg-[#FFC107]/20 rounded-full flex items-center justify-center mx-auto"><Lock className="text-[#FFC107]" size={40} /></div>
             <h2 className="text-2xl font-black uppercase tracking-tighter text-white">Admin Access</h2>
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <input type="password" placeholder="Pass: admin" className="w-full p-5 bg-black border-2 border-white/10 rounded-2xl text-center text-xl font-bold outline-none focus:border-[#FFC107] text-white" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} autoFocus />
+              <input type="password" placeholder="Enter Password" className="w-full p-5 bg-black border-2 border-white/10 rounded-2xl text-center text-xl font-bold outline-none focus:border-[#FFC107] text-white" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} autoFocus />
               <button type="submit" className="w-full p-4 bg-[#FFC107] text-black rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-yellow-600 transition">Unlock</button>
             </form>
             <button onClick={() => setIsPasswordModalOpen(false)} className="text-gray-500 text-xs uppercase hover:text-white">Cancel</button>
@@ -803,3 +818,4 @@ export default function App() {
     </div>
   );
 }
+// Atualizacao de Seguranca V7.4 Final
