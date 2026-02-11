@@ -818,4 +818,3 @@ export default function App() {
     </div>
   );
 }
-// Atualizacao de Seguranca V7.4
