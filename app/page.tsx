@@ -8,7 +8,7 @@ import {
   Mail, Phone, Award, Pencil, PlayCircle, Youtube, ChevronLeft, ChevronRight,
   Loader2, Menu, ArrowRight, MessageSquare, Car, Lightbulb, Printer, Building,
   PlusCircle, Trash2, Settings, Image as ImageIcon, Globe, Instagram, Facebook, Linkedin,
-  Palette, PenTool, Megaphone, Maximize, FileText, User, RefreshCw, Key
+  Palette, PenTool, Megaphone, Maximize, FileText, User, RefreshCw, Key, Video
 } from 'lucide-react';
 
 // Firebase Imports
@@ -41,26 +41,21 @@ const DEFAULT_SETTINGS = {
   adminPassword: "admin"
 };
 
-// --- NOVA LISTA DE CATEGORIAS (4 PILARES) ---
 const SERVICES_DATA = [
   { 
     category: "Art Design", 
-    icon: <Palette size={20}/>,
     products: ["Custom Canvas Print", "Acrylic Print", "DTF T-Shirts", "Cartoon Design", "Photo Design"] 
   },
   { 
     category: "Marketing Digital", 
-    icon: <TrendingUp size={20}/>,
     products: ["Google Ads", "Meta Ads", "SEO", "E-mail Marketing", "website", "Landing page", "Ecommerce", "AI Automation", "Social Media Management", "Graphic Design"] 
   },
   { 
     category: "Signs", 
-    icon: <Building size={20}/>,
     products: ["Car Wrap", "Banners", "Backdrop", "Retractable Banner", "Illuminated Signs", "Window Graphics", "Wall Graphics", "Street Signs", "Promotion signs", "Outdoor Signs", "ADA Signs", "Trade Show", "Storefront Signs", "Monument Signs", "3D Lettering", "Light Box Signs", "Wide Format Print & More"] 
   },
   { 
     category: "Printing", 
-    icon: <Printer size={20}/>,
     products: ["Brochure", "Business Card", "Flyers", "Hang Door", "Post Card", "Table Menu", "Tri Fold", "Poster"] 
   }
 ];
@@ -68,126 +63,67 @@ const SERVICES_DATA = [
 // --- INICIALIZAÇÃO FIREBASE ---
 let db = null;
 let auth = null;
-const appId = 'twokinp-site-final-production-v8'; 
+const appId = 'twokinp-site-final-production-v9'; 
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
   auth = getAuth(app);
   db = getFirestore(app);
-} catch (e) { 
-  console.error("Erro ao conectar no Firebase", e); 
-}
+} catch (e) { console.error("Firebase Error", e); }
 
-// --- MODAL DE ORÇAMENTO ---
+// --- COMPONENTE MODAL DE ORÇAMENTO ---
 const QuoteModal = React.memo(({ onClose }) => {
   const [step, setStep] = useState(1);
   const [qCategory, setQCategory] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    category: '', product: '', width: '', height: '', quantity: 1,
-    description: '', name: '', email: '', phone: '', fileUrl: ''
-  });
+  const [formData, setFormData] = useState({ category: '', product: '', quantity: 1, name: '', email: '', phone: '' });
 
-  const handleCategorySelect = (cat) => {
-    setQCategory(cat);
-    setFormData(prev => ({...prev, category: cat.category}));
-    setStep(2); 
-  };
+  const handleCategorySelect = (cat) => { setQCategory(cat); setFormData({...formData, category: cat.category}); setStep(2); };
 
   const handleSubmit = async () => {
     setLoading(true);
-    const n8nData = {
-        "Date": new Date().toLocaleDateString(),
-        "Customer Name": formData.name,
-        "Phone": formData.phone,
-        "Email": formData.email,
-        "Category": formData.category,
-        "Product": formData.product,
-        "Quantity": formData.quantity
-    };
-
     try {
-        await fetch('https://n8n.twokinp.cloud/webhook/pedido-site-v2', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(n8nData)
-        });
-
-        if (db) {
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), {
-                ...formData,
-                status: 'New',
-                createdAt: new Date().toISOString()
-            });
-        }
-        setSuccess(true); 
-        setTimeout(() => onClose(), 3000);
-    } catch (error) {
-        setSuccess(true);
-        setTimeout(() => onClose(), 3000);
-    } finally {
-        setLoading(false);
-    }
+        await fetch('https://n8n.twokinp.cloud/webhook/pedido-site-v2', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+        if (db) await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), { ...formData, createdAt: new Date().toISOString() });
+        setSuccess(true); setTimeout(() => onClose(), 3000);
+    } catch (e) { setSuccess(true); setTimeout(() => onClose(), 3000); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white border border-gray-200 p-8 rounded-[2.5rem] w-full max-w-2xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-black transition-colors"><X /></button>
-        
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in">
+      <div className="bg-white p-10 rounded-[3rem] w-full max-w-xl relative shadow-2xl overflow-hidden">
+        <button onClick={onClose} className="absolute top-8 right-8 text-gray-400 hover:text-black transition-colors"><X /></button>
         {success ? (
-           <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in">
-             <div className="bg-green-100 p-4 rounded-full mb-4">
-                <CheckCircle2 className="text-green-600 w-12 h-12" />
-             </div>
-             <h2 className="text-2xl font-bold mb-2 text-black">Request Sent!</h2>
-             <p className="text-gray-500">We'll get back to you shortly.</p>
-           </div>
+            <div className="py-10 text-center animate-in zoom-in">
+                <CheckCircle2 className="mx-auto text-green-500 w-16 h-16 mb-4" />
+                <h2 className="text-2xl font-black uppercase">Sent!</h2>
+            </div>
         ) : (
-          <div className="text-left">
-            <h2 className="text-2xl font-black uppercase mb-8 text-black tracking-tight">
-                {step === 1 && "Start your Project"}
-                {step === 2 && `About ${qCategory?.category}`}
-                {step === 3 && "Personal Details"}
-            </h2>
-
-            {step === 1 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {SERVICES_DATA.map(cat => (
-                  <button key={cat.category} onClick={() => handleCategorySelect(cat)}
-                    className="p-6 bg-gray-50 border border-gray-100 rounded-2xl hover:border-black hover:bg-white transition-all group flex items-center gap-4">
-                    <div className="p-3 bg-white rounded-xl shadow-sm group-hover:bg-[#FFC107] transition-colors">{cat.icon}</div>
-                    <h3 className="font-bold text-gray-800">{cat.category}</h3>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {step === 2 && (
-               <div className="space-y-6">
-                 <div>
-                   <label className="block text-xs font-black uppercase text-gray-400 mb-3 tracking-widest">Specific Item</label>
-                   <select className="w-full bg-gray-50 p-4 rounded-2xl border border-gray-100 outline-none focus:border-black transition-all" value={formData.product} onChange={(e) => setFormData({...formData, product: e.target.value})}>
-                     <option value="">Choose one...</option>
-                     {qCategory.products.map(p => <option key={p} value={p}>{p}</option>)}
-                   </select>
-                 </div>
-                 <button onClick={() => setStep(3)} disabled={!formData.product} className="w-full bg-black text-white font-black py-5 rounded-2xl hover:bg-gray-800 transition shadow-lg disabled:opacity-20">NEXT STEP</button>
-               </div>
-            )}
-
-            {step === 3 && (
-               <div className="space-y-4">
-                  <input type="text" placeholder="Your Full Name" className="w-full bg-gray-50 p-4 rounded-2xl border border-gray-100 outline-none focus:border-black" onChange={(e) => setFormData({...formData, name: e.target.value})}/>
-                  <input type="email" placeholder="Email Address" className="w-full bg-gray-50 p-4 rounded-2xl border border-gray-100 outline-none focus:border-black" onChange={(e) => setFormData({...formData, email: e.target.value})}/>
-                  <input type="tel" placeholder="Phone Number" className="w-full bg-gray-50 p-4 rounded-2xl border border-gray-100 outline-none focus:border-black" onChange={(e) => setFormData({...formData, phone: e.target.value})}/>
-                  <button onClick={handleSubmit} disabled={loading || !formData.email} className="w-full bg-[#FFC107] text-black font-black py-5 rounded-2xl hover:bg-yellow-500 transition shadow-lg flex justify-center items-center">
-                     {loading ? <Loader2 className="animate-spin" /> : "SEND REQUEST"}
-                  </button>
-               </div>
-            )}
-          </div>
+            <div className="text-left">
+                <h2 className="text-2xl font-black uppercase mb-8">{step === 1 ? "Select Area" : "Details"}</h2>
+                {step === 1 && (
+                    <div className="grid grid-cols-1 gap-3">
+                        {SERVICES_DATA.map(c => (
+                            <button key={c.category} onClick={() => handleCategorySelect(c)} className="w-full p-5 bg-gray-50 rounded-2xl text-left font-bold hover:bg-[#FFC107] transition-all flex items-center justify-between">
+                                {c.category} <ArrowRight size={18}/>
+                            </button>
+                        ))}
+                    </div>
+                )}
+                {step === 2 && (
+                    <div className="space-y-4">
+                        <select className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold" value={formData.product} onChange={e => setFormData({...formData, product: e.target.value})}>
+                            <option>Which service?</option>
+                            {qCategory.products.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                        <input type="text" placeholder="Name" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl" onChange={e => setFormData({...formData, name: e.target.value})}/>
+                        <input type="email" placeholder="Email" className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl" onChange={e => setFormData({...formData, email: e.target.value})}/>
+                        <button onClick={handleSubmit} className="w-full bg-black text-white p-5 rounded-2xl font-black uppercase shadow-xl">Submit Request</button>
+                    </div>
+                )}
+            </div>
         )}
       </div>
     </div>
@@ -196,11 +132,10 @@ const QuoteModal = React.memo(({ onClose }) => {
 
 export default function App() {
   const [products, setProducts] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [banners, setBanners] = useState([]);
-  const [leads, setLeads] = useState([]);
   const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
   const [filter, setFilter] = useState("All");
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -209,110 +144,188 @@ export default function App() {
   const [passwordInput, setPasswordInput] = useState("");
   const [adminTab, setAdminTab] = useState("projects");
   const [isSaving, setIsSaving] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: '', category: 'Signs', price: '', description: '', images: ['', '', '', '', ''] });
+  const [newVideo, setNewVideo] = useState({ title: '', url: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', category: 'Signs', image: '', description: '' });
+
   const portfolioRef = useRef(null);
 
   useEffect(() => {
     if (!db) return;
-    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (s) => setProducts(s.docs.map(d => ({ id: d.id, ...d.data() }))));
-    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), (s) => setBanners(s.docs.map(d => ({ id: d.id, ...d.data() }))));
-    onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), (s) => s.exists() && setSiteSettings(s.data()));
-    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'leads'), (s) => setLeads(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), s => setProducts(s.docs.map(d => ({id: d.id, ...d.data()}))));
+    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'videos'), s => setVideos(s.docs.map(d => ({id: d.id, ...d.data()}))));
+    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), s => setBanners(s.docs.map(d => ({id: d.id, ...d.data()}))));
+    onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), s => s.exists() && setSiteSettings(s.data()));
   }, []);
 
-  useEffect(() => {
-    if (banners.length <= 1) return;
-    const t = setInterval(() => setCurrentSlide(p => (p + 1) % banners.length), 6000);
-    return () => clearInterval(t);
-  }, [banners]);
+  const handleAddVideo = async (e) => {
+      e.preventDefault(); if(!newVideo.url) return;
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'videos'), { ...newVideo, createdAt: new Date().toISOString() });
+      setNewVideo({title: '', url: ''});
+  };
 
-  const handleSaveSettings = async (e) => {
-    e.preventDefault(); setIsSaving(true);
-    try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings); alert("Saved!"); } 
-    finally { setIsSaving(false); }
+  const handleDeleteVideo = async (id) => { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', id)); };
+
+  const handleAddProduct = async (e) => {
+      e.preventDefault();
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), { ...newProduct, createdAt: new Date().toISOString() });
+      setNewProduct({ name: '', category: 'Signs', image: '', description: '' });
   };
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => (filter === "All" || p.category === filter) && p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                   .sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-  }, [products, filter, searchTerm]);
+    return products.filter(p => (filter === "All" || p.category === filter)).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [products, filter]);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-[#FFC107]/30">
+    <div className="min-h-screen bg-white text-gray-900 font-sans">
       
+      {/* TOP BAR - CONTACT & SOCIALS */}
+      <div className="bg-gray-50 border-b border-gray-100 py-3 px-6 sm:px-12 flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="flex items-center gap-6">
+            <a href={`tel:${siteSettings.whatsapp}`} className="flex items-center gap-2 hover:text-[#FFC107] transition-colors"><Phone size={14} className="text-[#FFC107]"/> {siteSettings.whatsapp}</a>
+            <div className="hidden sm:flex items-center gap-2"><MapPin size={14}/> {siteSettings.address}</div>
+        </div>
+        <div className="flex items-center gap-4">
+            <a href={siteSettings.instagramUrl} target="_blank" className="hover:text-black transition-colors"><Instagram size={16}/></a>
+            <a href={siteSettings.facebookUrl} target="_blank" className="hover:text-black transition-colors"><Facebook size={16}/></a>
+        </div>
+      </div>
+
       {/* HEADER CLEAN */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 h-24 flex justify-between items-center px-6 sm:px-12 shadow-sm">
-        <div className="flex items-center gap-4 cursor-pointer" onClick={() => {setFilter("All"); window.scrollTo(0,0)}}>
-          {/* LOGO IMAGE */}
-          <img src="https://raw.githubusercontent.com/twokinp-hue/twokinp-website/main/logo.png" alt="Twokinp Logo" className="h-14 w-auto object-contain" />
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl h-24 flex justify-between items-center px-6 sm:px-12 border-b border-gray-50">
+        <div className="cursor-pointer" onClick={() => {setFilter("All"); window.scrollTo(0,0)}}>
+          <img src="https://raw.githubusercontent.com/twokinp-hue/twokinp-website/main/logo.png" alt="Twokinp Logo" className="h-16 w-auto" />
         </div>
 
-        <div className="hidden lg:flex items-center gap-8">
-            {SERVICES_DATA.map(cat => (
-                <button key={cat.category} onClick={() => {setFilter(cat.category); portfolioRef.current?.scrollIntoView({behavior:'smooth'})}} 
-                className={`text-[11px] font-black uppercase tracking-widest transition-colors ${filter === cat.category ? 'text-[#FFC107]' : 'text-gray-400 hover:text-black'}`}>
-                    {cat.category}
+        <div className="hidden lg:flex gap-10">
+            {SERVICES_DATA.map(c => (
+                <button key={c.category} onClick={() => {setFilter(c.category); portfolioRef.current?.scrollIntoView({behavior:'smooth'})}} 
+                className={`text-[11px] font-black uppercase tracking-widest transition-all ${filter === c.category ? 'text-[#FFC107] scale-110' : 'text-gray-400 hover:text-black'}`}>
+                    {c.category}
                 </button>
             ))}
         </div>
 
         <div className="flex items-center gap-4">
-          <button onClick={() => setIsPasswordModalOpen(true)} className="p-3 text-gray-400 hover:text-black transition-colors"><LayoutDashboard size={20} /></button>
-          <button onClick={() => setIsQuoteModalOpen(true)} className="bg-black text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all">Get Quote</button>
+            <button onClick={() => setIsPasswordModalOpen(true)} className="p-2 text-gray-300 hover:text-black transition-colors"><LayoutDashboard size={20}/></button>
+            <button onClick={() => setIsQuoteModalOpen(true)} className="bg-black text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#FFC107] hover:text-black transition-all shadow-xl">Get Quote</button>
         </div>
       </header>
 
-      <main className="max-w-[1600px] mx-auto px-6 py-12">
+      <main className="max-w-[1800px] mx-auto px-6 py-12">
         
-        {/* HERO CLEAN SLIDER */}
+        {/* SLIDER */}
         {!isAdminMode && banners.length > 0 && (
-          <div className="mb-20 relative h-[600px] rounded-[3rem] overflow-hidden shadow-2xl bg-gray-100 group">
-            {banners.map((slide, idx) => (
-              <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
-                <img src={slide.image} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent"></div>
-                <div className="absolute inset-0 flex items-center px-12 sm:px-24">
-                  <div className="max-w-2xl text-left">
-                    <span className="bg-[#FFC107] text-black px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 inline-block">{siteSettings.badgeText}</span>
-                    <h2 className="text-5xl sm:text-8xl font-black text-white leading-none uppercase tracking-tighter mb-8">{slide.title}</h2>
-                    <p className="text-gray-200 text-lg sm:text-xl mb-10 max-w-md leading-relaxed">{slide.subtitle}</p>
-                    <button onClick={() => setIsQuoteModalOpen(true)} className="bg-white text-black px-10 py-5 rounded-full font-black uppercase text-xs hover:bg-[#FFC107] transition-all flex items-center gap-3">Start Now <ArrowRight size={16}/></button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+            <div className="mb-20 relative h-[650px] rounded-[4rem] overflow-hidden shadow-2xl">
+                {banners.map((s, i) => (
+                    <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
+                        <img src={s.image} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-transparent"></div>
+                        <div className="absolute inset-0 flex items-center px-12 sm:px-24">
+                            <div className="max-w-xl text-left">
+                                <span className="bg-[#FFC107] text-black px-4 py-1.5 rounded-full text-[10px] font-black uppercase mb-6 inline-block">{siteSettings.badgeText}</span>
+                                <h2 className="text-6xl sm:text-8xl font-black text-black leading-none uppercase tracking-tighter mb-8">{s.title}</h2>
+                                <button onClick={() => setIsQuoteModalOpen(true)} className="bg-black text-white px-10 py-5 rounded-full font-black uppercase text-xs flex items-center gap-3">Request Price <ArrowRight size={18}/></button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
         )}
 
-        {/* PORTFOLIO GRID - CLEAN WHITE CARDS */}
-        <div ref={portfolioRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {filteredProducts.map(p => (
-            <div key={p.id} onClick={() => setSelectedProduct(p)} className="group cursor-pointer">
-              <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-gray-50 border border-gray-100 mb-6">
-                <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <div className="px-2 text-left">
-                <span className="text-[9px] font-black uppercase text-[#FFC107] tracking-[0.2em] mb-2 block">{p.category}</span>
-                <h3 className="text-2xl font-black uppercase text-black leading-none group-hover:underline">{p.name}</h3>
-              </div>
+        {/* VIDEOS SECTION (IF ANY) */}
+        {!isAdminMode && videos.length > 0 && (
+            <div className="mb-20 text-left">
+                <h2 className="text-4xl font-black uppercase mb-10 tracking-tighter">Featured <span className="text-[#FFC107]">Works</span></h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {videos.map(v => (
+                        <div key={v.id} className="aspect-video bg-gray-100 rounded-[2.5rem] overflow-hidden shadow-lg border border-gray-100">
+                            <iframe className="w-full h-full" src={v.url.replace("watch?v=", "embed/")} title={v.title} frameBorder="0" allowFullScreen></iframe>
+                        </div>
+                    ))}
+                </div>
             </div>
-          ))}
+        )}
+
+        {/* PROJECTS GRID */}
+        <div ref={portfolioRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+            {filteredProducts.map(p => (
+                <div key={p.id} onClick={() => setSelectedProduct(p)} className="group cursor-pointer">
+                    <div className="relative aspect-[3/4] rounded-[3rem] overflow-hidden bg-gray-50 border border-gray-100 mb-6">
+                        <img src={p.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </div>
+                    <div className="text-left px-4">
+                        <span className="text-[9px] font-black uppercase text-[#FFC107] tracking-widest mb-2 block">{p.category}</span>
+                        <h3 className="text-3xl font-black uppercase text-black leading-none tracking-tighter">{p.name}</h3>
+                    </div>
+                </div>
+            ))}
         </div>
       </main>
 
-      {/* FOOTER CLEAN */}
       <footer className="bg-gray-50 py-24 px-12 border-t border-gray-100 text-center">
-        <img src="https://raw.githubusercontent.com/twokinp-hue/twokinp-website/main/logo.png" alt="Logo" className="h-12 mx-auto mb-12 opacity-80" />
-        <div className="flex flex-wrap justify-center gap-12 text-[11px] font-black uppercase tracking-widest text-gray-400 mb-16">
-          <div className="flex items-center gap-2"><MapPin size={16} className="text-[#FFC107]"/> {siteSettings.address}</div>
-          <a href={`tel:${siteSettings.whatsapp}`} className="flex items-center gap-2 hover:text-black"><Phone size={16} className="text-[#FFC107]"/> {siteSettings.whatsapp}</a>
-          <a href={`mailto:${siteSettings.email}`} className="flex items-center gap-2 hover:text-black"><Mail size={16} className="text-[#FFC107]"/> {siteSettings.email}</a>
-        </div>
-        <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.4em]">{siteSettings.copyright}</p>
+        <img src="https://raw.githubusercontent.com/twokinp-hue/twokinp-website/main/logo.png" alt="Logo" className="h-16 mx-auto mb-12" />
+        <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.5em]">{siteSettings.copyright}</p>
       </footer>
 
-      {/* ADMIN MODAL LOGIN */}
+      {/* DASHBOARD ADMIN */}
+      {isAdminMode && (
+          <div className="fixed inset-0 z-[90] bg-white overflow-y-auto p-12 text-left animate-in slide-in-from-bottom">
+              <div className="max-w-6xl mx-auto">
+                  <div className="flex justify-between items-center mb-16">
+                      <h2 className="text-4xl font-black uppercase tracking-tighter italic">TWOKINP <span className="text-[#FFC107]">ADMIN</span></h2>
+                      <button onClick={() => setIsAdminMode(false)} className="bg-black text-white px-8 py-3 rounded-full font-black text-xs">CLOSE PANEL</button>
+                  </div>
+
+                  <div className="flex gap-4 mb-10 overflow-x-auto pb-4">
+                      {["projects", "videos", "settings"].map(t => (
+                          <button key={t} onClick={() => setAdminTab(t)} className={`px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest ${adminTab === t ? 'bg-[#FFC107] text-black shadow-lg' : 'bg-gray-100 text-gray-400'}`}>{t}</button>
+                      ))}
+                  </div>
+
+                  {adminTab === "projects" && (
+                      <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-10 rounded-[3rem] border border-gray-100">
+                          <input placeholder="Project Title" className="p-5 bg-white rounded-2xl border-none outline-none shadow-sm" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
+                          <select className="p-5 bg-white rounded-2xl border-none outline-none shadow-sm" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}>
+                              {SERVICES_DATA.map(c => <option key={c.category} value={c.category}>{c.category}</option>)}
+                          </select>
+                          <input placeholder="Image URL" className="p-5 bg-white rounded-2xl border-none outline-none shadow-sm md:col-span-2" value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})} required />
+                          <button type="submit" className="md:col-span-2 bg-black text-white p-5 rounded-2xl font-black uppercase">Save Project</button>
+                      </form>
+                  )}
+
+                  {adminTab === "videos" && (
+                      <div className="space-y-10">
+                          <form onSubmit={handleAddVideo} className="bg-gray-50 p-10 rounded-[3rem] grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <input placeholder="Video Title" className="p-5 bg-white rounded-2xl outline-none" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} required />
+                              <input placeholder="YouTube URL (https://...)" className="p-5 bg-white rounded-2xl outline-none" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} required />
+                              <button type="submit" className="md:col-span-2 bg-[#FFC107] p-5 rounded-2xl font-black uppercase">Add Video to Site</button>
+                          </form>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {videos.map(v => (
+                                  <div key={v.id} className="p-4 bg-gray-50 rounded-2xl flex justify-between items-center border border-gray-100">
+                                      <span className="font-bold text-xs">{v.title}</span>
+                                      <button onClick={() => handleDeleteVideo(v.id)} className="text-red-500 hover:scale-110 transition-transform"><Trash2 size={18}/></button>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  )}
+
+                  {adminTab === "settings" && (
+                      <form onSubmit={handleSaveSettings} className="bg-gray-50 p-10 rounded-[3rem] grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <input placeholder="WhatsApp" className="p-5 bg-white rounded-2xl outline-none shadow-sm" value={siteSettings.whatsapp} onChange={e => setSiteSettings({...siteSettings, whatsapp: e.target.value})} />
+                          <input placeholder="Address" className="p-5 bg-white rounded-2xl outline-none shadow-sm" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} />
+                          <input placeholder="Instagram URL" className="p-5 bg-white rounded-2xl outline-none shadow-sm" value={siteSettings.instagramUrl} onChange={e => setSiteSettings({...siteSettings, instagramUrl: e.target.value})} />
+                          <input placeholder="Facebook URL" className="p-5 bg-white rounded-2xl outline-none shadow-sm" value={siteSettings.facebookUrl} onChange={e => setSiteSettings({...siteSettings, facebookUrl: e.target.value})} />
+                          <button type="submit" className="md:col-span-2 bg-black text-white p-5 rounded-2xl font-black uppercase">Update Global Info</button>
+                      </form>
+                  )}
+              </div>
+          </div>
+      )}
+
+      {/* LOGIN MODAL */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/95 backdrop-blur-xl animate-in fade-in">
             <div className="w-full max-w-sm p-12 text-center">
@@ -320,45 +333,20 @@ export default function App() {
                 <h2 className="text-2xl font-black uppercase mb-8">Admin Access</h2>
                 <form onSubmit={(e) => {
                     e.preventDefault();
-                    if (passwordInput === (siteSettings.adminPassword || "admin")) { setIsAdminMode(true); setIsPasswordModalOpen(false); }
+                    if (passwordInput === (siteSettings.adminPassword || "admin")) { setIsAdminMode(true); setIsPasswordModalOpen(false); setPasswordInput(""); }
                     else alert("Access Denied");
                 }} className="space-y-4">
-                    <input type="password" placeholder="Password" className="w-full p-5 bg-gray-50 border border-gray-100 rounded-3xl text-center font-bold outline-none focus:border-black" autoFocus onChange={e => setPasswordInput(e.target.value)} />
-                    <button type="submit" className="w-full bg-black text-white p-5 rounded-3xl font-black uppercase">Unlock Dashboard</button>
-                    <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="text-xs text-gray-400 uppercase font-black tracking-widest mt-4">Close</button>
+                    <input type="password" placeholder="Enter Password" className="w-full p-5 bg-gray-50 rounded-3xl text-center font-bold outline-none focus:border-black" autoFocus onChange={e => setPasswordInput(e.target.value)} />
+                    <button type="submit" className="w-full bg-black text-white p-5 rounded-3xl font-black uppercase">Unlock</button>
+                    <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="text-xs text-gray-400 uppercase font-black tracking-widest mt-6">Cancel</button>
                 </form>
             </div>
         </div>
       )}
 
-      {/* ADMIN DASHBOARD VIEW */}
-      {isAdminMode && (
-          <div className="fixed inset-0 z-[90] bg-white overflow-y-auto p-12">
-              <div className="max-w-4xl mx-auto">
-                  <div className="flex justify-between items-center mb-12">
-                      <h2 className="text-3xl font-black uppercase tracking-tighter italic">Dashboard <span className="text-[#FFC107]">Panel</span></h2>
-                      <button onClick={() => setIsAdminMode(false)} className="bg-black text-white px-6 py-2 rounded-full font-black text-xs">EXIT ADMIN</button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-                      <div className="bg-gray-50 p-10 rounded-[2.5rem] border border-gray-100">
-                          <h3 className="font-black uppercase text-sm mb-6 flex items-center gap-2"><Settings size={18}/> Global Settings</h3>
-                          <form onSubmit={handleSaveSettings} className="space-y-4">
-                              <input placeholder="Admin Password" className="w-full p-4 bg-white border border-gray-100 rounded-2xl outline-none" value={siteSettings.adminPassword} onChange={e => setSiteSettings({...siteSettings, adminPassword: e.target.value})} />
-                              <input placeholder="WhatsApp" className="w-full p-4 bg-white border border-gray-100 rounded-2xl outline-none" value={siteSettings.whatsapp} onChange={e => setSiteSettings({...siteSettings, whatsapp: e.target.value})} />
-                              <input placeholder="Address" className="w-full p-4 bg-white border border-gray-100 rounded-2xl outline-none" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} />
-                              <button type="submit" className="w-full bg-black text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg">Save Global Data</button>
-                          </form>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* QUOTE MODAL COMPONENT */}
       {isQuoteModalOpen && <QuoteModal onClose={() => setIsQuoteModalOpen(false)} />}
 
     </div>
   );
 }
-// TWOKINP V8.0 - CLEAN WHITE DESIGN EDITION
+// TWOKINP V9.0 - ULTRA CLEAN & VIDEO READY
