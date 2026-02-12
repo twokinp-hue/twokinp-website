@@ -43,7 +43,7 @@ const SERVICES_DATA = [
 ];
 
 let db = null;
-const appId = 'twokinp-final-v24';
+const appId = 'twokinp-production-v25';
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -57,8 +57,8 @@ const CategoryRow = ({ title, items, onSelect, id }) => {
 
   return (
     <div id={id} className="mb-12 relative group text-left scroll-mt-24">
-      <div className="flex justify-between items-end mb-4 px-2">
-        <h2 className="text-2xl font-black uppercase tracking-tighter italic text-black border-l-4 border-[#FFC107] pl-3">{title}</h2>
+      <div className="flex justify-between items-end mb-4 px-2 text-black">
+        <h2 className="text-2xl font-black uppercase tracking-tighter italic border-l-4 border-[#FFC107] pl-3">{title}</h2>
         <div className="flex gap-2">
           <button onClick={() => scroll('l')} className="p-1.5 bg-gray-100 rounded-full hover:bg-[#FFC107] transition-all"><ChevronLeft size={16}/></button>
           <button onClick={() => scroll('r')} className="p-1.5 bg-gray-100 rounded-full hover:bg-[#FFC107] transition-all"><ChevronRight size={16}/></button>
@@ -90,6 +90,10 @@ export default function App() {
   const [passwordInput, setPasswordInput] = useState("");
   const [adminTab, setAdminTab] = useState("banners");
 
+  const [editingBannerId, setEditingBannerId] = useState(null);
+  const [editingProjectId, setEditingProjectId] = useState(null);
+  const [editingVideoId, setEditingVideoId] = useState(null);
+
   const [newBanner, setNewBanner] = useState({ title: '', subtitle: '', image: '' });
   const [newVideo, setNewVideo] = useState({ title: '', url: '' });
   const [newProduct, setNewProduct] = useState({ name: '', category: 'Signs', image: '', description: '', price: '' });
@@ -108,26 +112,45 @@ export default function App() {
     return () => clearInterval(t);
   }, [banners]);
 
-  // Função de Navegação Inteligente
   const navigateToService = (category, productName) => {
     const sectionId = category.toLowerCase().replace(/\s+/g, '-');
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
-      // Tenta encontrar o produto específico para abrir o modal automaticamente
       const product = products.find(p => p.name.toLowerCase() === productName.toLowerCase());
       if (product) setSelectedDetails(product);
     }
   };
 
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    if(editingProjectId) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', editingProjectId), newProduct);
+    else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), { ...newProduct, createdAt: new Date().toISOString() });
+    setNewProduct({ name: '', category: 'Signs', image: '', description: '', price: '' }); setEditingProjectId(null);
+  };
+
+  const handleAddBanner = async (e) => {
+    e.preventDefault();
+    if(editingBannerId) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', editingBannerId), newBanner);
+    else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'banners'), { ...newBanner, createdAt: new Date().toISOString() });
+    setNewBanner({ title: '', subtitle: '', image: '' }); setEditingBannerId(null);
+  };
+
+  const handleAddVideo = async (e) => {
+    e.preventDefault();
+    if(editingVideoId) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', editingVideoId), newVideo);
+    else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'videos'), { ...newVideo, createdAt: new Date().toISOString() });
+    setNewVideo({title: '', url: ''}); setEditingVideoId(null);
+  };
+
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-[#FFC107]/30">
+    <div className="min-h-screen bg-white text-gray-900 font-sans">
       
       {/* TOPBAR */}
       <div className="bg-black text-white py-2 px-6 sm:px-12 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
         <div></div>
         <div className="flex items-center gap-8">
-            <a href={`tel:${siteSettings.whatsapp}`} className="flex items-center gap-2 hover:text-[#FFC107] transition-all"><Phone size={12} className="text-[#FFC107]"/> {siteSettings.whatsapp}</a>
+            <a href={`tel:${siteSettings.whatsapp}`} className="flex items-center gap-2 hover:text-[#FFC107]"><Phone size={12} className="text-[#FFC107]"/> {siteSettings.whatsapp}</a>
             <div className="flex gap-4 border-l border-white/20 pl-6">
                 <a href={siteSettings.instagramUrl} target="_blank" className="hover:text-[#FFC107]"><Instagram size={14}/></a>
                 <a href={siteSettings.facebookUrl} target="_blank" className="hover:text-[#FFC107]"><Facebook size={14}/></a>
@@ -138,45 +161,38 @@ export default function App() {
       {/* HEADER */}
       <header className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md h-20 flex justify-between items-center px-6 sm:px-12 border-b border-gray-100 shadow-sm text-black">
         <div className="cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-          <img src={siteSettings.logoUrl} alt="Logo" className="h-10 w-auto object-contain" />
+          <img src={siteSettings.logoUrl} alt="Logo" className="h-10 w-auto" />
         </div>
         <nav className="hidden lg:flex gap-8">
             {SERVICES_DATA.map(cat => (
-                <div key={cat.category} className="relative group text-black">
+                <div key={cat.category} className="relative group">
                     <button className="flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#FFC107]">
                         {cat.category} <ChevronDown size={12} />
                     </button>
                     <div className="absolute top-full left-0 w-64 bg-white shadow-2xl rounded-xl py-4 border opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-4 group-hover:translate-y-2 transition-all">
                         {cat.products.map(p => (
-                            <button 
-                                key={p} 
-                                onClick={() => navigateToService(cat.category, p)} 
-                                className="w-full text-left px-6 py-2 text-[9px] font-bold text-gray-400 hover:text-[#FFC107] uppercase tracking-widest"
-                            >
-                                {p}
-                            </button>
+                            <button key={p} onClick={() => navigateToService(cat.category, p)} className="w-full text-left px-6 py-2 text-[9px] font-bold text-gray-400 hover:text-[#FFC107] uppercase">{p}</button>
                         ))}
                     </div>
                 </div>
             ))}
         </nav>
-        <div className="flex items-center gap-4 text-black">
-            <button onClick={() => setIsPasswordModalOpen(true)} className="p-2 text-gray-300 hover:text-black transition-colors"><LayoutDashboard size={20}/></button>
+        <div className="flex items-center gap-4">
+            <button onClick={() => setIsPasswordModalOpen(true)} className="p-2 text-gray-300 hover:text-black"><LayoutDashboard size={20}/></button>
             <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#FFC107]">Get Quote</button>
         </div>
       </header>
 
       <main className="max-w-[1600px] mx-auto px-6 py-10">
-        {/* BANNER */}
         {!isAdminMode && banners.length > 0 && (
             <div className="mb-12 relative h-[500px] rounded-xl overflow-hidden shadow-xl bg-gray-50 border">
                 {banners.map((s, i) => (
                     <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
                         <img src={s.image} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/10 to-transparent flex items-center px-12 sm:px-20 text-left text-black">
-                            <div className="max-w-xl">
+                            <div className="max-w-xl animate-in slide-in-from-left">
                                 <span className="bg-[#FFC107] text-black px-3 py-1 rounded-full text-[9px] font-black uppercase mb-4 inline-block">{siteSettings.badgeText}</span>
-                                <h2 className="text-5xl sm:text-7xl font-black text-black leading-none uppercase tracking-tighter mb-6 italic">{s.title}</h2>
+                                <h2 className="text-5xl sm:text-7xl font-black leading-none uppercase tracking-tighter mb-6 italic">{s.title}</h2>
                                 <p className="text-gray-500 text-lg mb-10 font-bold uppercase">{s.subtitle}</p>
                                 <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase flex items-center gap-2">Start Project <ArrowRight size={14}/></button>
                             </div>
@@ -188,8 +204,8 @@ export default function App() {
 
         {/* VIDEOS */}
         {!isAdminMode && videos.length > 0 && (
-            <div className="mb-16 text-left text-black">
-                <h2 className="text-2xl font-black uppercase mb-6 tracking-tighter italic border-l-4 border-[#FFC107] pl-3">Visual Highlights</h2>
+            <div className="mb-16 text-left">
+                <h2 className="text-2xl font-black uppercase mb-6 italic border-l-4 border-[#FFC107] pl-3 text-black">Visual Highlights</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {videos.map(v => (
                         <div key={v.id} className="aspect-video bg-black rounded-xl overflow-hidden shadow-lg border">
@@ -201,80 +217,131 @@ export default function App() {
         )}
 
         {/* CATEGORY ROWS */}
-        {!isAdminMode && (
-          <div className="space-y-4">
-            {SERVICES_DATA.map(cat => (
-              <CategoryRow 
-                key={cat.category}
-                id={cat.category.toLowerCase().replace(/\s+/g, '-')}
-                title={cat.category} 
-                items={products.filter(p => p.category === cat.category)}
-                onSelect={setSelectedDetails}
-              />
-            ))}
-          </div>
-        )}
+        {!isAdminMode && SERVICES_DATA.map(cat => (
+            <CategoryRow key={cat.category} id={cat.category.toLowerCase().replace(/\s+/g, '-')} title={cat.category} items={products.filter(p => p.category === cat.category)} onSelect={setSelectedDetails} />
+        ))}
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-gray-50 py-24 px-12 border-t border-gray-100 text-left text-black">
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 text-black">
+      <footer className="bg-gray-50 py-24 px-12 border-t text-left text-black">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
+            <div><img src={siteSettings.logoUrl} alt="Logo" className="h-10 mb-8" /><p className="text-gray-400 text-xs font-bold uppercase">{siteSettings.aboutUs}</p></div>
             <div>
-                <img src={siteSettings.logoUrl} alt="Logo" className="h-10 mb-8" />
-                <p className="text-gray-400 text-xs font-bold uppercase leading-relaxed">{siteSettings.aboutUs}</p>
-            </div>
-            <div>
-                <h4 className="font-black uppercase text-[11px] mb-8 tracking-[0.2em]">Contact</h4>
-                <div className="space-y-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <h4 className="font-black uppercase text-[11px] mb-8">Contact</h4>
+                <div className="space-y-4 text-[10px] font-bold text-gray-500 uppercase">
                     <p className="flex items-center gap-3"><MapPin size={14} className="text-[#FFC107]"/> {siteSettings.address}</p>
                     <p className="flex items-center gap-3"><Phone size={14} className="text-[#FFC107]"/> {siteSettings.whatsapp}</p>
                     <p className="flex items-center gap-3"><Mail size={14} className="text-[#FFC107]"/> {siteSettings.email}</p>
                 </div>
             </div>
             <div>
-                <h4 className="font-black uppercase text-[11px] mb-8 tracking-[0.2em]">Social</h4>
+                <h4 className="font-black uppercase text-[11px] mb-8">Social</h4>
                 <div className="flex gap-4">
-                    <a href={siteSettings.instagramUrl} target="_blank" className="p-3 bg-white border rounded-full shadow-sm hover:bg-[#FFC107] transition-all"><Instagram size={18}/></a>
-                    <a href={siteSettings.facebookUrl} target="_blank" className="p-3 bg-white border rounded-full shadow-sm hover:bg-[#FFC107] transition-all"><Facebook size={18}/></a>
+                    <a href={siteSettings.instagramUrl} target="_blank" className="p-3 bg-white border rounded-full"><Instagram size={18}/></a>
+                    <a href={siteSettings.facebookUrl} target="_blank" className="p-3 bg-white border rounded-full"><Facebook size={18}/></a>
                 </div>
             </div>
-            <div className="text-center md:text-right">
-                <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.5em]">{siteSettings.copyright}</p>
-            </div>
+            <div className="text-right"><p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">{siteSettings.copyright}</p></div>
         </div>
       </footer>
+
+      {/* DASHBOARD COMPLETO (FINAL V25) */}
+      {isAdminMode && (
+          <div className="fixed inset-0 z-[500] bg-white overflow-y-auto p-12 text-left text-black animate-in slide-in-from-bottom">
+              <div className="max-w-6xl mx-auto">
+                  <div className="flex justify-between items-center mb-16 border-b pb-10">
+                      <h2 className="text-4xl font-black uppercase italic tracking-tighter">Dashboard <span className="text-[#FFC107]">Control</span></h2>
+                      <button onClick={() => setIsAdminMode(false)} className="bg-black text-white px-10 py-4 rounded-full font-black text-xs uppercase">Exit Admin</button>
+                  </div>
+                  <div className="flex gap-3 mb-12 bg-gray-50 p-2 rounded-full w-fit">
+                      {["banners", "projects", "videos", "settings"].map(t => (<button key={t} onClick={() => setAdminTab(t)} className={`px-10 py-4 rounded-full font-black text-[11px] uppercase transition-all ${adminTab === t ? 'bg-white text-black shadow-lg' : 'text-gray-400'}`}>{t}</button>))}
+                  </div>
+
+                  {adminTab === "banners" && (
+                    <div className="space-y-12">
+                      <form onSubmit={handleAddBanner} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border">
+                        <input placeholder="Headline" className="p-5 rounded-2xl border font-bold" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} required />
+                        <input placeholder="Image URL" className="p-5 rounded-2xl border font-bold text-blue-500" value={newBanner.image} onChange={e => setNewBanner({...newBanner, image: e.target.value})} required />
+                        <textarea placeholder="Subtitle" className="md:col-span-2 p-5 rounded-2xl border font-bold h-20" value={newBanner.subtitle} onChange={e => setNewBanner({...newBanner, subtitle: e.target.value})} />
+                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase">{editingBannerId ? "Update" : "Add"}</button>
+                      </form>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {banners.map(b => (
+                          <div key={b.id} className="relative aspect-video rounded-xl overflow-hidden border">
+                            <img src={b.image} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-4 opacity-0 hover:opacity-100 transition-all">
+                              <button onClick={() => { setEditingBannerId(b.id); setNewBanner({...b}); window.scrollTo(0,0); }} className="bg-white p-2 rounded-full text-blue-500"><Pencil size={18}/></button>
+                              <button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', b.id)); }} className="bg-white p-2 rounded-full text-red-500"><Trash2 size={18}/></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {adminTab === "projects" && (
+                    <div className="space-y-12">
+                      <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border shadow-sm">
+                        <input placeholder="Name" className="p-5 rounded-2xl border font-bold text-black" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
+                        <select className="p-5 rounded-2xl border font-bold text-black" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}>{SERVICES_DATA.map(c => <option key={c.category} value={c.category}>{c.category}</option>)}</select>
+                        <input placeholder="Image Link" className="p-5 rounded-2xl border font-bold text-blue-500" value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})} required />
+                        <input placeholder="Price" className="p-5 rounded-2xl border font-bold text-black" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} />
+                        <textarea placeholder="Description" className="p-5 rounded-2xl border font-bold md:col-span-2 h-24 text-black" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} />
+                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingProjectId ? "Update" : "Add"}</button>
+                      </form>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                        {products.map(p => (<div key={p.id} className="bg-white p-2 rounded-xl border relative group text-black"><img src={p.image} className="w-full aspect-square object-cover rounded-lg" /><div className="flex gap-2 mt-2"><button onClick={() => { setEditingProjectId(p.id); setNewProduct({...p}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', p.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div>))}
+                      </div>
+                    </div>
+                  )}
+
+                  {adminTab === "videos" && (
+                    <div className="space-y-12">
+                      <form onSubmit={handleAddVideo} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border">
+                        <input placeholder="Label" className="p-5 rounded-2xl border font-bold" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} required />
+                        <input placeholder="YouTube Link" className="p-5 rounded-2xl border font-bold text-red-500" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} required />
+                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingVideoId ? "Update" : "Publish"}</button>
+                      </form>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {videos.map(v => (<div key={v.id} className="p-4 bg-gray-50 rounded-xl border flex flex-col gap-2 shadow-sm text-black"><iframe className="w-full aspect-video rounded-lg" src={v.url.replace("watch?v=", "embed/")}></iframe><div className="flex justify-between items-center px-1"><span className="text-[10px] font-black uppercase">{v.title}</span><div className="flex gap-2"><button onClick={() => { setEditingVideoId(v.id); setNewVideo({...v}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', v.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div></div>))}
+                      </div>
+                    </div>
+                  )}
+
+                  {adminTab === "settings" && (
+                    <form onSubmit={async (e) => { e.preventDefault(); await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings); alert("Profile Synced!"); }} className="grid grid-cols-1 md:grid-cols-2 gap-10 bg-gray-50 p-12 rounded-[2.5rem] border text-black shadow-sm">
+                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Logo URL</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.logoUrl} onChange={e => setSiteSettings({...siteSettings, logoUrl: e.target.value})} /></div>
+                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">WhatsApp</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.whatsapp} onChange={e => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
+                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Physical Address</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
+                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Official Email</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.email} onChange={e => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
+                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Instagram</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.instagramUrl} onChange={e => setSiteSettings({...siteSettings, instagramUrl: e.target.value})} /></div>
+                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Facebook</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.facebookUrl} onChange={e => setSiteSettings({...siteSettings, facebookUrl: e.target.value})} /></div>
+                      <div className="space-y-3 md:col-span-2"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">About Us Statement</label><textarea className="w-full p-5 bg-white border rounded-2xl h-32 font-bold text-black" value={siteSettings.aboutUs} onChange={e => setSiteSettings({...siteSettings, aboutUs: e.target.value})} /></div>
+                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Copyright Disclaimer</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.copyright} onChange={e => setSiteSettings({...siteSettings, copyright: e.target.value})} /></div>
+                      <button type="submit" className="md:col-span-2 bg-black text-white p-7 rounded-3xl font-black uppercase hover:bg-[#FFC107]">Update Settings</button>
+                    </form>
+                  )}
+              </div>
+          </div>
+      )}
 
       {/* MODAL DETALHES */}
       {selectedDetails && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in text-black text-left">
               <div className="bg-white rounded-xl max-w-4xl w-full overflow-hidden flex flex-col md:flex-row shadow-2xl relative">
-                  <button onClick={() => setSelectedDetails(null)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black transition-colors"><X size={24}/></button>
+                  <button onClick={() => setSelectedDetails(null)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black"><X size={24}/></button>
                   <div className="md:w-1/2 aspect-square bg-gray-50"><img src={selectedDetails.image} className="w-full h-full object-cover" /></div>
-                  <div className="md:w-1/2 p-10 flex flex-col justify-between text-black">
+                  <div className="md:w-1/2 p-10 flex flex-col justify-between">
                       <div>
                           <span className="text-[10px] font-black uppercase text-[#FFC107] bg-black px-3 py-1 rounded-full mb-4 inline-block">{selectedDetails.category}</span>
-                          <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-6 text-black">{selectedDetails.name}</h2>
+                          <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-6">{selectedDetails.name}</h2>
                           <div className="bg-gray-50 p-6 rounded-xl mb-6 border border-gray-100">
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price starting at:</p>
                               <p className="text-3xl font-black text-black">${selectedDetails.price || "TBA"}</p>
                           </div>
                           <p className="text-gray-500 text-sm leading-relaxed mb-6">{selectedDetails.description || "Premium visual solution."}</p>
                       </div>
-                      <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="w-full bg-[#FFC107] text-black p-5 rounded-xl font-black uppercase text-xs shadow-xl hover:bg-black hover:text-white transition-all">Order Service</button>
+                      <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="w-full bg-[#FFC107] text-black p-5 rounded-xl font-black uppercase text-xs shadow-xl">Order Service</button>
                   </div>
-              </div>
-          </div>
-      )}
-
-      {/* DASHBOARD ADMIN (RESUMIDO PARA ECONOMIA DE CÓDIGO) */}
-      {isAdminMode && (
-          <div className="fixed inset-0 z-[500] bg-white overflow-y-auto p-12 text-left text-black">
-              <div className="max-w-6xl mx-auto">
-                  <div className="flex justify-between items-center mb-16 border-b pb-10">
-                      <h2 className="text-4xl font-black uppercase italic tracking-tighter">Site <span className="text-[#FFC107]">Admin</span></h2>
-                      <button onClick={() => setIsAdminMode(false)} className="bg-black text-white px-10 py-4 rounded-full font-black text-xs uppercase">Exit Admin</button>
-                  </div>
-                  {/* ... Restante do Dashboard Mantido ... */}
               </div>
           </div>
       )}
