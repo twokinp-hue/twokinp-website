@@ -43,7 +43,7 @@ const SERVICES_DATA = [
 ];
 
 let db = null;
-const appId = 'twokinp-final-v22';
+const appId = 'twokinp-final-v23';
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -52,7 +52,7 @@ try {
 
 const CategoryRow = ({ title, items, onSelect }) => {
   const scrollRef = useRef(null);
-  const scroll = (d) => { if (scrollRef.current) scrollRef.current.scrollBy({ left: d === 'l' ? -350 : 350, behavior: 'smooth' }); };
+  const scroll = (d) => { if (scrollRef.current) scrollRef.current.scrollBy({ left: d === 'l' ? -300 : 300, behavior: 'smooth' }); };
   if (items.length === 0) return null;
 
   return (
@@ -64,13 +64,14 @@ const CategoryRow = ({ title, items, onSelect }) => {
           <button onClick={() => scroll('r')} className="p-1.5 bg-gray-100 rounded-full hover:bg-[#FFC107] transition-all"><ChevronRight size={16}/></button>
         </div>
       </div>
-      <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4">
+      <div ref={scrollRef} className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4">
         {items.map(p => (
-          <div key={p.id} onClick={() => onSelect(p)} className="min-w-[200px] md:min-w-[240px] snap-start cursor-pointer group/card">
-            <div className="relative aspect-[3/4] rounded-lg overflow-hidden border shadow-sm mb-2">
+          <div key={p.id} onClick={() => onSelect(p)} className="snap-start cursor-pointer group/card shrink-0">
+            {/* Medida Fixa solicitada: 1080px por 1100px (em escala compacta para o site) */}
+            <div className="relative w-[270px] h-[275px] rounded-lg overflow-hidden border shadow-sm mb-2">
               <img src={p.image} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
             </div>
-            <h3 className="text-[10px] font-black uppercase text-black italic leading-tight px-1 truncate">{p.name}</h3>
+            <h3 className="text-[10px] font-black uppercase text-black italic px-1 truncate w-[270px]">{p.name}</h3>
           </div>
         ))}
       </div>
@@ -181,7 +182,7 @@ export default function App() {
                 {banners.map((s, i) => (
                     <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
                         <img src={s.image} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/10 to-transparent flex items-center px-12 sm:px-20 text-left">
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/10 to-transparent flex items-center px-12 sm:px-20 text-left text-black">
                             <div className="max-w-xl animate-in slide-in-from-left">
                                 <span className="bg-[#FFC107] text-black px-3 py-1 rounded-full text-[9px] font-black uppercase mb-4 inline-block">{siteSettings.badgeText}</span>
                                 <h2 className="text-5xl sm:text-7xl font-black text-black leading-none uppercase tracking-tighter mb-6 italic">{s.title}</h2>
@@ -196,7 +197,7 @@ export default function App() {
 
         {/* VIDEOS - NOW BELOW BANNER */}
         {!isAdminMode && videos.length > 0 && (
-            <div className="mb-16 text-left">
+            <div className="mb-16 text-left text-black">
                 <h2 className="text-2xl font-black uppercase mb-6 tracking-tighter italic border-l-4 border-[#FFC107] pl-3">Visual <span className="text-[#FFC107]">Highlights</span></h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {videos.map(v => (
@@ -208,7 +209,7 @@ export default function App() {
             </div>
         )}
 
-        {/* CATEGORY ROWS - COMPACT IMAGES */}
+        {/* CATEGORY ROWS - FIXED 1080x1100 RATIO */}
         {!isAdminMode && (
           <div className="space-y-4">
             {SERVICES_DATA.map(cat => (
@@ -225,7 +226,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="bg-gray-50 py-24 px-12 border-t border-gray-100 text-left text-black">
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 text-black">
             <div>
                 <img src={siteSettings.logoUrl} alt="Logo" className="h-10 mb-8" />
                 <p className="text-gray-400 text-xs font-bold uppercase leading-relaxed">{siteSettings.aboutUs}</p>
@@ -257,10 +258,10 @@ export default function App() {
               <div className="bg-white rounded-xl max-w-4xl w-full overflow-hidden flex flex-col md:flex-row shadow-2xl relative">
                   <button onClick={() => setSelectedDetails(null)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black transition-colors"><X size={24}/></button>
                   <div className="md:w-1/2 aspect-square bg-gray-50"><img src={selectedDetails.image} className="w-full h-full object-cover" /></div>
-                  <div className="md:w-1/2 p-10 flex flex-col justify-between">
+                  <div className="md:w-1/2 p-10 flex flex-col justify-between text-black">
                       <div>
                           <span className="text-[10px] font-black uppercase text-[#FFC107] bg-black px-3 py-1 rounded-full mb-4 inline-block">{selectedDetails.category}</span>
-                          <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-6">{selectedDetails.name}</h2>
+                          <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-6 text-black">{selectedDetails.name}</h2>
                           <div className="bg-gray-50 p-6 rounded-xl mb-6 border border-gray-100">
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price starting at:</p>
                               <p className="text-3xl font-black text-black">${selectedDetails.price || "TBA"}</p>
@@ -273,12 +274,12 @@ export default function App() {
           </div>
       )}
 
-      {/* DASHBOARD ADMIN (HIDDEN SECTIONS FOR BREVITY - FULL LOGIC REMAINS) */}
+      {/* DASHBOARD ADMIN */}
       {isAdminMode && (
           <div className="fixed inset-0 z-[500] bg-white overflow-y-auto p-12 text-left text-black animate-in slide-in-from-bottom">
-              <div className="max-w-6xl mx-auto">
+              <div className="max-w-6xl mx-auto text-black">
                   <div className="flex justify-between items-center mb-16 border-b pb-10">
-                      <h2 className="text-4xl font-black uppercase italic tracking-tighter">Site <span className="text-[#FFC107]">Admin</span></h2>
+                      <h2 className="text-4xl font-black uppercase italic tracking-tighter">Dashboard <span className="text-[#FFC107]">Admin</span></h2>
                       <button onClick={() => setIsAdminMode(false)} className="bg-black text-white px-10 py-4 rounded-full font-black text-xs uppercase shadow-xl hover:bg-[#FFC107] hover:text-black transition-all">Exit Admin</button>
                   </div>
 
@@ -288,31 +289,54 @@ export default function App() {
                       ))}
                   </div>
 
-                  {/* ADMIN TAB LOGIC CONTINUES... */}
+                  {/* RESTORED BANNER TAB (V23 FIX) */}
+                  {adminTab === "banners" && (
+                    <div className="space-y-12">
+                      <form onSubmit={handleAddBanner} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border shadow-sm">
+                        <h3 className="md:col-span-2 text-xl font-black uppercase text-[#FFC107]">Add Banner (Unlimited)</h3>
+                        <input placeholder="Headline" className="p-5 rounded-2xl border font-bold text-black" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} required />
+                        <input placeholder="Image URL" className="p-5 rounded-2xl border font-bold text-blue-500" value={newBanner.image} onChange={e => setNewBanner({...newBanner, image: e.target.value})} required />
+                        <textarea placeholder="Subtitle" className="md:col-span-2 p-5 rounded-2xl border font-bold h-20 text-black" value={newBanner.subtitle} onChange={e => setNewBanner({...newBanner, subtitle: e.target.value})} />
+                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingBannerId ? "Update Banner" : "Create Banner"}</button>
+                      </form>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {banners.map(b => (
+                          <div key={b.id} className="relative aspect-video rounded-xl overflow-hidden border shadow-xl">
+                            <img src={b.image} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-4 opacity-0 hover:opacity-100 transition-all">
+                              <button onClick={() => { setEditingBannerId(b.id); setNewBanner({...b}); window.scrollTo(0,0); }} className="bg-white p-2 rounded-full text-blue-500"><Pencil size={18}/></button>
+                              <button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'banners', b.id)); }} className="bg-white p-2 rounded-full text-red-500"><Trash2 size={18}/></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {adminTab === "projects" && (
                     <div className="space-y-12">
                       <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border shadow-sm">
-                        <input placeholder="Name" className="p-5 rounded-2xl border font-bold" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
+                        <input placeholder="Name" className="p-5 rounded-2xl border font-bold text-black" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
                         <select className="p-5 rounded-2xl border font-bold text-black" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}>{SERVICES_DATA.map(c => <option key={c.category} value={c.category}>{c.category}</option>)}</select>
                         <input placeholder="Image Link" className="p-5 rounded-2xl border font-bold text-blue-500" value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})} required />
-                        <input placeholder="Price" className="p-5 rounded-2xl border font-bold" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} />
-                        <textarea placeholder="Description" className="p-5 rounded-2xl border font-bold md:col-span-2 h-24" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} />
+                        <input placeholder="Price" className="p-5 rounded-2xl border font-bold text-black" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} />
+                        <textarea placeholder="Description" className="p-5 rounded-2xl border font-bold md:col-span-2 h-24 text-black" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} />
                         <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingProjectId ? "Update" : "Add"}</button>
                       </form>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                        {products.map(p => (<div key={p.id} className="bg-white p-2 rounded-xl border relative group"><img src={p.image} className="w-full aspect-square object-cover rounded-lg" /><div className="flex gap-2 mt-2"><button onClick={() => { setEditingProjectId(p.id); setNewProduct({...p}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', p.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div>))}
+                        {products.map(p => (<div key={p.id} className="bg-white p-2 rounded-xl border relative group text-black"><img src={p.image} className="w-full aspect-square object-cover rounded-lg" /><div className="flex gap-2 mt-2"><button onClick={() => { setEditingProjectId(p.id); setNewProduct({...p}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', p.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div>))}
                       </div>
                     </div>
                   )}
 
                   {adminTab === "videos" && (
-                    <div className="space-y-12">
+                    <div className="space-y-12 text-black">
                       <form onSubmit={handleAddVideo} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border shadow-sm">
-                        <input placeholder="Label" className="p-5 rounded-2xl border font-bold" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} required />
+                        <input placeholder="Label" className="p-5 rounded-2xl border font-bold text-black" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} required />
                         <input placeholder="YouTube Link" className="p-5 rounded-2xl border font-bold text-red-500" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} required />
                         <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingVideoId ? "Update" : "Publish"}</button>
                       </form>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-black">
                         {videos.map(v => (<div key={v.id} className="p-4 bg-gray-50 rounded-xl border flex flex-col gap-2 shadow-sm text-black"><iframe className="w-full aspect-video rounded-lg" src={v.url.replace("watch?v=", "embed/")}></iframe><div className="flex justify-between items-center px-1"><span className="text-[10px] font-black uppercase">{v.title}</span><div className="flex gap-2"><button onClick={() => { setEditingVideoId(v.id); setNewVideo({...v}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', v.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div></div>))}
                       </div>
                     </div>
@@ -343,7 +367,7 @@ export default function App() {
                     e.preventDefault();
                     if (passwordInput === (siteSettings.adminPassword || "admin")) { setIsAdminMode(true); setIsPasswordModalOpen(false); setPasswordInput(""); }
                     else alert("Access Denied");
-                }} className="space-y-4">
+                }} className="space-y-4 text-black">
                     <input type="password" placeholder="Dashboard Secret" className="w-full p-6 bg-gray-50 rounded-[2rem] text-center font-bold outline-none border border-gray-100 focus:border-black transition-all text-black" autoFocus onChange={e => setPasswordInput(e.target.value)} />
                     <button type="submit" className="w-full bg-black text-white p-6 rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-[#FFC107]">Authenticate</button>
                     <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="text-[10px] text-gray-300 uppercase font-black mt-10 hover:text-black transition-all underline underline-offset-8">Return Home</button>
@@ -373,4 +397,4 @@ export default function App() {
     </div>
   );
 }
-// TWOKINP V22.0 - VIDEOS BELOW BANNER & OPTIMIZED GRID
+// TWOKINP V23.0 - FIXED RATIO & DASHBOARD RESTORED
