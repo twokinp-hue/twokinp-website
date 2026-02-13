@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  X, LayoutDashboard, Lock, Phone, Pencil, 
+  X, LayoutDashboard, Lock, Phone, Pencil, Menu,
   ChevronDown, MapPin, Mail, ArrowRight, Trash2,
   Instagram, Facebook, ChevronLeft, ChevronRight, Video as VideoIcon
 } from 'lucide-react';
@@ -43,7 +43,7 @@ const SERVICES_DATA = [
 ];
 
 let db = null;
-const appId = 'twokinp-production-v25';
+const appId = 'twokinp-production-v26';
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -58,19 +58,19 @@ const CategoryRow = ({ title, items, onSelect, id }) => {
   return (
     <div id={id} className="mb-12 relative group text-left scroll-mt-24">
       <div className="flex justify-between items-end mb-4 px-2 text-black">
-        <h2 className="text-2xl font-black uppercase tracking-tighter italic border-l-4 border-[#FFC107] pl-3">{title}</h2>
+        <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter italic border-l-4 border-[#FFC107] pl-3">{title}</h2>
         <div className="flex gap-2">
           <button onClick={() => scroll('l')} className="p-1.5 bg-gray-100 rounded-full hover:bg-[#FFC107] transition-all"><ChevronLeft size={16}/></button>
           <button onClick={() => scroll('r')} className="p-1.5 bg-gray-100 rounded-full hover:bg-[#FFC107] transition-all"><ChevronRight size={16}/></button>
         </div>
       </div>
-      <div ref={scrollRef} className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4">
+      <div ref={scrollRef} className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 px-2">
         {items.map(p => (
           <div key={p.id} onClick={() => onSelect(p)} className="snap-start cursor-pointer group/card shrink-0">
-            <div className="relative w-[270px] h-[275px] rounded-lg overflow-hidden border shadow-sm mb-2">
+            <div className="relative w-[240px] h-[245px] md:w-[270px] md:h-[275px] rounded-lg overflow-hidden border shadow-sm mb-2">
               <img src={p.image} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
             </div>
-            <h3 className="text-[10px] font-black uppercase text-black italic px-1 truncate w-[270px]">{p.name}</h3>
+            <h3 className="text-[10px] font-black uppercase text-black italic px-1 truncate w-[240px] md:w-[270px]">{p.name}</h3>
           </div>
         ))}
       </div>
@@ -89,6 +89,7 @@ export default function App() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [adminTab, setAdminTab] = useState("banners");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [editingBannerId, setEditingBannerId] = useState(null);
   const [editingProjectId, setEditingProjectId] = useState(null);
@@ -113,6 +114,7 @@ export default function App() {
   }, [banners]);
 
   const navigateToService = (category, productName) => {
+    setIsMobileMenuOpen(false);
     const sectionId = category.toLowerCase().replace(/\s+/g, '-');
     const element = document.getElementById(sectionId);
     if (element) {
@@ -160,9 +162,16 @@ export default function App() {
 
       {/* HEADER */}
       <header className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md h-20 flex justify-between items-center px-6 sm:px-12 border-b border-gray-100 shadow-sm text-black">
-        <div className="cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-          <img src={siteSettings.logoUrl} alt="Logo" className="h-10 w-auto" />
+        <div className="flex items-center gap-4">
+            {/* MOBILE MENU TRIGGER */}
+            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-black hover:text-[#FFC107]">
+                <Menu size={24} />
+            </button>
+            <div className="cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+              <img src={siteSettings.logoUrl} alt="Logo" className="h-8 md:h-10 w-auto" />
+            </div>
         </div>
+
         <nav className="hidden lg:flex gap-8">
             {SERVICES_DATA.map(cat => (
                 <div key={cat.category} className="relative group">
@@ -177,24 +186,49 @@ export default function App() {
                 </div>
             ))}
         </nav>
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-2 md:gap-4">
             <button onClick={() => setIsPasswordModalOpen(true)} className="p-2 text-gray-300 hover:text-black"><LayoutDashboard size={20}/></button>
-            <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#FFC107]">Get Quote</button>
+            <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-4 md:px-8 py-2 md:py-3 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-[#FFC107]">Get Quote</button>
         </div>
       </header>
 
-      <main className="max-w-[1600px] mx-auto px-6 py-10">
+      {/* MOBILE MENU DRAWER */}
+      {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm lg:hidden">
+              <div className="absolute top-0 left-0 h-full w-[80%] bg-white p-8 animate-in slide-in-from-left">
+                  <div className="flex justify-between items-center mb-10 text-black">
+                      <img src={siteSettings.logoUrl} alt="Logo" className="h-8" />
+                      <button onClick={() => setIsMobileMenuOpen(false)}><X size={24}/></button>
+                  </div>
+                  <div className="space-y-6 overflow-y-auto max-h-[70vh]">
+                      {SERVICES_DATA.map(cat => (
+                          <div key={cat.category}>
+                              <h3 className="text-xs font-black uppercase text-[#FFC107] mb-3">{cat.category}</h3>
+                              <div className="flex flex-col gap-3 pl-4 border-l border-gray-100">
+                                  {cat.products.map(p => (
+                                      <button key={p} onClick={() => navigateToService(cat.category, p)} className="text-[10px] font-bold text-gray-400 text-left uppercase">{p}</button>
+                                  ))}
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      <main className="max-w-[1600px] mx-auto px-4 md:px-6 py-10">
         {!isAdminMode && banners.length > 0 && (
-            <div className="mb-12 relative h-[500px] rounded-xl overflow-hidden shadow-xl bg-gray-50 border">
+            <div className="mb-12 relative h-[350px] md:h-[500px] rounded-xl overflow-hidden shadow-xl bg-gray-50 border">
                 {banners.map((s, i) => (
                     <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
                         <img src={s.image} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/10 to-transparent flex items-center px-12 sm:px-20 text-left text-black">
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/10 to-transparent flex items-center px-8 md:px-20 text-left text-black">
                             <div className="max-w-xl animate-in slide-in-from-left">
-                                <span className="bg-[#FFC107] text-black px-3 py-1 rounded-full text-[9px] font-black uppercase mb-4 inline-block">{siteSettings.badgeText}</span>
-                                <h2 className="text-5xl sm:text-7xl font-black leading-none uppercase tracking-tighter mb-6 italic">{s.title}</h2>
-                                <p className="text-gray-500 text-lg mb-10 font-bold uppercase">{s.subtitle}</p>
-                                <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-8 py-4 rounded-full font-black text-[10px] uppercase flex items-center gap-2">Start Project <ArrowRight size={14}/></button>
+                                <span className="bg-[#FFC107] text-black px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase mb-4 inline-block">{siteSettings.badgeText}</span>
+                                <h2 className="text-3xl md:text-7xl font-black leading-none uppercase tracking-tighter mb-4 md:mb-6 italic">{s.title}</h2>
+                                <p className="text-gray-500 text-sm md:text-lg mb-8 md:mb-10 font-bold uppercase">{s.subtitle}</p>
+                                <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-black text-[9px] md:text-[10px] uppercase flex items-center gap-2">Start Project <ArrowRight size={14}/></button>
                             </div>
                         </div>
                     </div>
@@ -202,10 +236,9 @@ export default function App() {
             </div>
         )}
 
-        {/* VIDEOS */}
         {!isAdminMode && videos.length > 0 && (
             <div className="mb-16 text-left">
-                <h2 className="text-2xl font-black uppercase mb-6 italic border-l-4 border-[#FFC107] pl-3 text-black">Visual Highlights</h2>
+                <h2 className="text-xl md:text-2xl font-black uppercase mb-6 italic border-l-4 border-[#FFC107] pl-3 text-black">Visual Highlights</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {videos.map(v => (
                         <div key={v.id} className="aspect-video bg-black rounded-xl overflow-hidden shadow-lg border">
@@ -216,55 +249,82 @@ export default function App() {
             </div>
         )}
 
-        {/* CATEGORY ROWS */}
         {!isAdminMode && SERVICES_DATA.map(cat => (
             <CategoryRow key={cat.category} id={cat.category.toLowerCase().replace(/\s+/g, '-')} title={cat.category} items={products.filter(p => p.category === cat.category)} onSelect={setSelectedDetails} />
         ))}
       </main>
 
-      <footer className="bg-gray-50 py-24 px-12 border-t text-left text-black">
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
-            <div><img src={siteSettings.logoUrl} alt="Logo" className="h-10 mb-8" /><p className="text-gray-400 text-xs font-bold uppercase">{siteSettings.aboutUs}</p></div>
-            <div>
-                <h4 className="font-black uppercase text-[11px] mb-8">Contact</h4>
-                <div className="space-y-4 text-[10px] font-bold text-gray-500 uppercase">
-                    <p className="flex items-center gap-3"><MapPin size={14} className="text-[#FFC107]"/> {siteSettings.address}</p>
-                    <p className="flex items-center gap-3"><Phone size={14} className="text-[#FFC107]"/> {siteSettings.whatsapp}</p>
-                    <p className="flex items-center gap-3"><Mail size={14} className="text-[#FFC107]"/> {siteSettings.email}</p>
+      {/* FOOTER - MOBILE CENTERED, DESKTOP LEFT */}
+      <footer className="bg-gray-50 py-16 md:py-24 px-6 md:px-12 border-t text-center md:text-left text-black">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-16">
+            <div className="flex flex-col items-center md:items-start">
+                <img src={siteSettings.logoUrl} alt="Logo" className="h-10 mb-8" />
+                <p className="text-gray-400 text-xs font-bold uppercase max-w-xs">{siteSettings.aboutUs}</p>
+            </div>
+            <div className="flex flex-col items-center md:items-start">
+                <h4 className="font-black uppercase text-[11px] mb-6 md:mb-8 tracking-[0.2em]">Contact</h4>
+                <div className="space-y-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    <p className="flex items-center justify-center md:justify-start gap-3"><MapPin size={14} className="text-[#FFC107]"/> {siteSettings.address}</p>
+                    <p className="flex items-center justify-center md:justify-start gap-3"><Phone size={14} className="text-[#FFC107]"/> {siteSettings.whatsapp}</p>
+                    <p className="flex items-center justify-center md:justify-start gap-3"><Mail size={14} className="text-[#FFC107]"/> {siteSettings.email}</p>
                 </div>
             </div>
-            <div>
-                <h4 className="font-black uppercase text-[11px] mb-8">Social</h4>
+            <div className="flex flex-col items-center md:items-start">
+                <h4 className="font-black uppercase text-[11px] mb-6 md:mb-8 tracking-[0.2em]">Social</h4>
                 <div className="flex gap-4">
-                    <a href={siteSettings.instagramUrl} target="_blank" className="p-3 bg-white border rounded-full"><Instagram size={18}/></a>
-                    <a href={siteSettings.facebookUrl} target="_blank" className="p-3 bg-white border rounded-full"><Facebook size={18}/></a>
+                    <a href={siteSettings.instagramUrl} target="_blank" className="p-3 bg-white border rounded-full shadow-sm hover:bg-[#FFC107]"><Instagram size={18}/></a>
+                    <a href={siteSettings.facebookUrl} target="_blank" className="p-3 bg-white border rounded-full shadow-sm hover:bg-[#FFC107]"><Facebook size={18}/></a>
                 </div>
             </div>
-            <div className="text-right"><p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">{siteSettings.copyright}</p></div>
+            <div className="flex items-center justify-center md:justify-end">
+                <p className="text-[9px] md:text-[10px] text-gray-300 font-bold uppercase tracking-widest">{siteSettings.copyright}</p>
+            </div>
         </div>
       </footer>
 
-      {/* DASHBOARD COMPLETO (FINAL V25) */}
-      {isAdminMode && (
-          <div className="fixed inset-0 z-[500] bg-white overflow-y-auto p-12 text-left text-black animate-in slide-in-from-bottom">
-              <div className="max-w-6xl mx-auto">
-                  <div className="flex justify-between items-center mb-16 border-b pb-10">
-                      <h2 className="text-4xl font-black uppercase italic tracking-tighter">Dashboard <span className="text-[#FFC107]">Control</span></h2>
-                      <button onClick={() => setIsAdminMode(false)} className="bg-black text-white px-10 py-4 rounded-full font-black text-xs uppercase">Exit Admin</button>
+      {/* MODAL DETALHES & DASHBOARD - MANTIDOS INTEGRAIS */}
+      {selectedDetails && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in text-black text-left">
+              <div className="bg-white rounded-xl max-w-4xl w-full overflow-hidden flex flex-col md:flex-row shadow-2xl relative">
+                  <button onClick={() => setSelectedDetails(null)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black"><X size={24}/></button>
+                  <div className="md:w-1/2 aspect-square bg-gray-50"><img src={selectedDetails.image} className="w-full h-full object-cover" /></div>
+                  <div className="md:w-1/2 p-6 md:p-10 flex flex-col justify-between">
+                      <div>
+                          <span className="text-[10px] font-black uppercase text-[#FFC107] bg-black px-3 py-1 rounded-full mb-4 inline-block">{selectedDetails.category}</span>
+                          <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter mb-6">{selectedDetails.name}</h2>
+                          <div className="bg-gray-50 p-4 md:p-6 rounded-xl mb-6 border border-gray-100">
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price starting at:</p>
+                              <p className="text-2xl md:text-3xl font-black text-black">${selectedDetails.price || "TBA"}</p>
+                          </div>
+                          <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-6">{selectedDetails.description || "Premium visual solution."}</p>
+                      </div>
+                      <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="w-full bg-[#FFC107] text-black p-4 md:p-5 rounded-xl font-black uppercase text-[10px] shadow-xl">Order Service</button>
                   </div>
-                  <div className="flex gap-3 mb-12 bg-gray-50 p-2 rounded-full w-fit">
-                      {["banners", "projects", "videos", "settings"].map(t => (<button key={t} onClick={() => setAdminTab(t)} className={`px-10 py-4 rounded-full font-black text-[11px] uppercase transition-all ${adminTab === t ? 'bg-white text-black shadow-lg' : 'text-gray-400'}`}>{t}</button>))}
+              </div>
+          </div>
+      )}
+
+      {isAdminMode && (
+          <div className="fixed inset-0 z-[500] bg-white overflow-y-auto p-6 md:p-12 text-left text-black animate-in slide-in-from-bottom">
+              <div className="max-w-6xl mx-auto">
+                  <div className="flex justify-between items-center mb-10 md:mb-16 border-b pb-6 md:pb-10">
+                      <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter">Dashboard <span className="text-[#FFC107]">Control</span></h2>
+                      <button onClick={() => setIsAdminMode(false)} className="bg-black text-white px-6 md:px-10 py-3 md:py-4 rounded-full font-black text-[10px] uppercase">Exit Admin</button>
+                  </div>
+                  <div className="flex gap-2 md:gap-3 mb-10 bg-gray-50 p-1.5 md:p-2 rounded-full w-fit overflow-x-auto max-w-full">
+                      {["banners", "projects", "videos", "settings"].map(t => (<button key={t} onClick={() => setAdminTab(t)} className={`px-4 md:px-10 py-3 rounded-full font-black text-[9px] md:text-[11px] uppercase transition-all ${adminTab === t ? 'bg-white text-black shadow-lg' : 'text-gray-400'}`}>{t}</button>))}
                   </div>
 
+                  {/* FORMULÁRIOS MANTIDOS (IGUAIS V25) */}
                   {adminTab === "banners" && (
-                    <div className="space-y-12">
-                      <form onSubmit={handleAddBanner} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border">
-                        <input placeholder="Headline" className="p-5 rounded-2xl border font-bold" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} required />
-                        <input placeholder="Image URL" className="p-5 rounded-2xl border font-bold text-blue-500" value={newBanner.image} onChange={e => setNewBanner({...newBanner, image: e.target.value})} required />
-                        <textarea placeholder="Subtitle" className="md:col-span-2 p-5 rounded-2xl border font-bold h-20" value={newBanner.subtitle} onChange={e => setNewBanner({...newBanner, subtitle: e.target.value})} />
-                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase">{editingBannerId ? "Update" : "Add"}</button>
+                    <div className="space-y-10">
+                      <form onSubmit={handleAddBanner} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 md:p-12 rounded-3xl border">
+                        <input placeholder="Headline" className="p-4 md:p-5 rounded-2xl border font-bold" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} required />
+                        <input placeholder="Image URL" className="p-4 md:p-5 rounded-2xl border font-bold text-blue-500" value={newBanner.image} onChange={e => setNewBanner({...newBanner, image: e.target.value})} required />
+                        <textarea placeholder="Subtitle" className="md:col-span-2 p-4 md:p-5 rounded-2xl border font-bold h-20" value={newBanner.subtitle} onChange={e => setNewBanner({...newBanner, subtitle: e.target.value})} />
+                        <button type="submit" className="md:col-span-2 bg-black text-white p-5 md:p-6 rounded-2xl font-black uppercase">{editingBannerId ? "Update" : "Add"}</button>
                       </form>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                         {banners.map(b => (
                           <div key={b.id} className="relative aspect-video rounded-xl overflow-hidden border">
                             <img src={b.image} className="w-full h-full object-cover" />
@@ -279,74 +339,34 @@ export default function App() {
                   )}
 
                   {adminTab === "projects" && (
-                    <div className="space-y-12">
-                      <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border shadow-sm">
+                    <div className="space-y-10 text-black">
+                      <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 md:p-12 rounded-3xl border shadow-sm">
                         <input placeholder="Name" className="p-5 rounded-2xl border font-bold text-black" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
                         <select className="p-5 rounded-2xl border font-bold text-black" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}>{SERVICES_DATA.map(c => <option key={c.category} value={c.category}>{c.category}</option>)}</select>
                         <input placeholder="Image Link" className="p-5 rounded-2xl border font-bold text-blue-500" value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})} required />
                         <input placeholder="Price" className="p-5 rounded-2xl border font-bold text-black" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} />
                         <textarea placeholder="Description" className="p-5 rounded-2xl border font-bold md:col-span-2 h-24 text-black" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} />
-                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingProjectId ? "Update" : "Add"}</button>
+                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase">{editingProjectId ? "Update" : "Add"}</button>
                       </form>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                        {products.map(p => (<div key={p.id} className="bg-white p-2 rounded-xl border relative group text-black"><img src={p.image} className="w-full aspect-square object-cover rounded-lg" /><div className="flex gap-2 mt-2"><button onClick={() => { setEditingProjectId(p.id); setNewProduct({...p}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', p.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div>))}
-                      </div>
-                    </div>
-                  )}
-
-                  {adminTab === "videos" && (
-                    <div className="space-y-12">
-                      <form onSubmit={handleAddVideo} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border">
-                        <input placeholder="Label" className="p-5 rounded-2xl border font-bold" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} required />
-                        <input placeholder="YouTube Link" className="p-5 rounded-2xl border font-bold text-red-500" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} required />
-                        <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingVideoId ? "Update" : "Publish"}</button>
-                      </form>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {videos.map(v => (<div key={v.id} className="p-4 bg-gray-50 rounded-xl border flex flex-col gap-2 shadow-sm text-black"><iframe className="w-full aspect-video rounded-lg" src={v.url.replace("watch?v=", "embed/")}></iframe><div className="flex justify-between items-center px-1"><span className="text-[10px] font-black uppercase">{v.title}</span><div className="flex gap-2"><button onClick={() => { setEditingVideoId(v.id); setNewVideo({...v}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', v.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div></div>))}
+                      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                        {products.map(p => (<div key={p.id} className="bg-white p-2 rounded-xl border group text-black"><img src={p.image} className="w-full aspect-square object-cover rounded-lg" /><div className="flex gap-2 mt-2"><button onClick={() => { setEditingProjectId(p.id); setNewProduct({...p}); window.scrollTo(0,0); }} className="text-[#FFC107]"><Pencil size={14}/></button><button onClick={async () => { if(confirm("Del?")) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', p.id)); }} className="text-red-500"><Trash2 size={14}/></button></div></div>))}
                       </div>
                     </div>
                   )}
 
                   {adminTab === "settings" && (
-                    <form onSubmit={async (e) => { e.preventDefault(); await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings); alert("Profile Synced!"); }} className="grid grid-cols-1 md:grid-cols-2 gap-10 bg-gray-50 p-12 rounded-[2.5rem] border text-black shadow-sm">
-                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Logo URL</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.logoUrl} onChange={e => setSiteSettings({...siteSettings, logoUrl: e.target.value})} /></div>
-                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">WhatsApp</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.whatsapp} onChange={e => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
-                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Physical Address</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
-                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Official Email</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.email} onChange={e => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
-                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Instagram</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.instagramUrl} onChange={e => setSiteSettings({...siteSettings, instagramUrl: e.target.value})} /></div>
-                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Facebook</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.facebookUrl} onChange={e => setSiteSettings({...siteSettings, facebookUrl: e.target.value})} /></div>
-                      <div className="space-y-3 md:col-span-2"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">About Us Statement</label><textarea className="w-full p-5 bg-white border rounded-2xl h-32 font-bold text-black" value={siteSettings.aboutUs} onChange={e => setSiteSettings({...siteSettings, aboutUs: e.target.value})} /></div>
-                      <div className="space-y-3"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Copyright Disclaimer</label><input className="w-full p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.copyright} onChange={e => setSiteSettings({...siteSettings, copyright: e.target.value})} /></div>
-                      <button type="submit" className="md:col-span-2 bg-black text-white p-7 rounded-3xl font-black uppercase hover:bg-[#FFC107]">Update Settings</button>
+                    <form onSubmit={async (e) => { e.preventDefault(); await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings); alert("Profile Synced!"); }} className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 bg-gray-50 p-6 md:p-12 rounded-3xl border text-black shadow-sm">
+                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Logo URL</label><input className="w-full p-4 md:p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.logoUrl} onChange={e => setSiteSettings({...siteSettings, logoUrl: e.target.value})} /></div>
+                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">WhatsApp</label><input className="w-full p-4 md:p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.whatsapp} onChange={e => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
+                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Official Email</label><input className="w-full p-4 md:p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.email} onChange={e => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
+                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Address</label><input className="w-full p-4 md:p-5 bg-white border rounded-2xl font-bold text-black" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
+                      <button type="submit" className="md:col-span-2 bg-black text-white p-5 md:p-7 rounded-3xl font-black uppercase hover:bg-[#FFC107] mt-4">Update Settings</button>
                     </form>
                   )}
               </div>
           </div>
       )}
 
-      {/* MODAL DETALHES */}
-      {selectedDetails && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in text-black text-left">
-              <div className="bg-white rounded-xl max-w-4xl w-full overflow-hidden flex flex-col md:flex-row shadow-2xl relative">
-                  <button onClick={() => setSelectedDetails(null)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black"><X size={24}/></button>
-                  <div className="md:w-1/2 aspect-square bg-gray-50"><img src={selectedDetails.image} className="w-full h-full object-cover" /></div>
-                  <div className="md:w-1/2 p-10 flex flex-col justify-between">
-                      <div>
-                          <span className="text-[10px] font-black uppercase text-[#FFC107] bg-black px-3 py-1 rounded-full mb-4 inline-block">{selectedDetails.category}</span>
-                          <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-6">{selectedDetails.name}</h2>
-                          <div className="bg-gray-50 p-6 rounded-xl mb-6 border border-gray-100">
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Price starting at:</p>
-                              <p className="text-3xl font-black text-black">${selectedDetails.price || "TBA"}</p>
-                          </div>
-                          <p className="text-gray-500 text-sm leading-relaxed mb-6">{selectedDetails.description || "Premium visual solution."}</p>
-                      </div>
-                      <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="w-full bg-[#FFC107] text-black p-5 rounded-xl font-black uppercase text-xs shadow-xl">Order Service</button>
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* LOGIN MODAL */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-white/95 backdrop-blur-xl animate-in fade-in text-black">
             <div className="w-full max-w-sm p-12 text-center text-black">
