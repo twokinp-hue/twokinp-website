@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   X, LayoutDashboard, Lock, Phone, Pencil, Menu,
-  ChevronDown, MapPin, Mail, ArrowRight, Trash2, Palette,
+  ChevronDown, MapPin, Mail, ArrowRight, Trash2, Palette, Sparkles,
   Instagram, Facebook, ChevronLeft, ChevronRight, Video as VideoIcon
 } from 'lucide-react';
 
@@ -36,8 +36,8 @@ const DEFAULT_SETTINGS = {
   tagArtUrl: "https://tag-art-46907727.hubspotpagebuilder.com/tag-art"
 };
 
+// ATUALIZADO: Removido Art Design para evitar repetição
 const SERVICES_DATA = [
-  { category: "Art Design", products: ["Custom Canvas Print", "Acrylic Print", "DTF T-Shirts", "Cartoon Design", "Photo Design"] },
   { category: "Marketing Digital", products: ["Google Ads", "Meta Ads", "SEO", "E-mail Marketing", "Website", "Landing Page", "Ecommerce", "AI Automation", "Social Media Management", "Graphic Design"] },
   { category: "Signs", products: ["Car Wrap", "Banners", "Backdrop", "Retractable Banner", "Illuminated Signs", "Window Graphics", "Wall Graphics", "Street Signs", "Promotion signs", "Outdoor Signs", "ADA Signs", "Trade Show", "Storefront Signs", "Monument Signs", "3D Lettering", "Light Box Signs", "Wide Format Print & More"] },
   { category: "Printing", products: ["Brochure", "Business Card", "Flyers", "Hang Door", "Post Card", "Table Menu", "Tri Fold", "Poster"] }
@@ -169,10 +169,10 @@ export default function App() {
               <img src={siteSettings.logoUrl} alt="Logo" className="h-8 md:h-10 w-auto" />
             </div>
         </div>
-        <nav className="hidden lg:flex gap-8">
+        <nav className="hidden lg:flex gap-12">
             {SERVICES_DATA.map(cat => (
                 <div key={cat.category} className="relative group text-black">
-                    <button className="flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#FFC107]">
+                    <button className="flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-gray-400 group-hover:text-black">
                         {cat.category} <ChevronDown size={12} />
                     </button>
                     <div className="absolute top-full left-0 w-64 bg-white shadow-2xl rounded-xl py-4 border opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-4 group-hover:translate-y-2 transition-all">
@@ -183,19 +183,25 @@ export default function App() {
                 </div>
             ))}
         </nav>
-        <div className="flex items-center gap-3 md:gap-4">
-            {/* NOVO: BOTÃO TAG ART NO HEADER */}
-            <button 
-              onClick={() => window.open(DEFAULT_SETTINGS.tagArtUrl, '_blank')} 
-              className="hidden sm:flex items-center gap-2 border-2 border-black px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-[#FFC107] transition-all"
-            >
-              <Palette size={14} /> Tag Art
-            </button>
-
+        <div className="flex items-center gap-4">
             <button onClick={() => setIsPasswordModalOpen(true)} className="p-2 text-gray-300 hover:text-black transition-colors"><LayoutDashboard size={20}/></button>
             <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-4 md:px-8 py-2 md:py-3 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-[#FFC107]">Get Quote</button>
         </div>
       </header>
+
+      {/* NOVO: BARRA DE CHAMADA TAG ART (Abaixo do Header) */}
+      <div className="w-full bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b py-3 px-6 flex flex-col md:flex-row items-center justify-center gap-4 animate-in fade-in duration-700">
+          <p className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 italic">
+            <Sparkles size={14} className="text-[#FFC107]" /> 
+            Explore the artist's creative universe at our exclusive gallery
+          </p>
+          <button 
+            onClick={() => window.open(siteSettings.tagArtUrl, '_blank')} 
+            className="flex items-center gap-2 bg-white border border-black px-5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-black hover:text-[#FFC107] transition-all shadow-sm"
+          >
+            Visit Tag Art <ArrowRight size={12}/>
+          </button>
+      </div>
 
       {/* MOBILE MENU DRAWER */}
       {isMobileMenuOpen && (
@@ -205,21 +211,18 @@ export default function App() {
                       <img src={siteSettings.logoUrl} alt="Logo" className="h-8" />
                       <button onClick={() => setIsMobileMenuOpen(false)}><X size={24}/></button>
                   </div>
-                  
-                  {/* NOVO: LINK TAG ART MOBILE */}
-                  <div className="mb-8 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                    <button 
-                      onClick={() => window.open(DEFAULT_SETTINGS.tagArtUrl, '_blank')}
-                      className="w-full flex items-center justify-between text-xs font-black uppercase text-black italic"
-                    >
-                      Visit Tag Art Gallery <Palette size={16} className="text-[#FFC107]" />
-                    </button>
-                  </div>
+                  <div className="space-y-6 overflow-y-auto max-h-[80vh]">
+                      {/* LINK TAG ART NO MOBILE MENU COM DESTAQUE */}
+                      <button 
+                        onClick={() => window.open(siteSettings.tagArtUrl, '_blank')}
+                        className="w-full flex items-center justify-between p-4 bg-[#FFC107]/10 rounded-xl border border-[#FFC107] text-[11px] font-black uppercase italic text-black"
+                      >
+                        Visit Tag Art Gallery <Palette size={18}/>
+                      </button>
 
-                  <div className="space-y-6 overflow-y-auto max-h-[70vh]">
                       {SERVICES_DATA.map(cat => (
                           <div key={cat.category}>
-                              <h3 className="text-xs font-black uppercase text-[#FFC107] mb-3">{cat.category}</h3>
+                              <h3 className="text-xs font-black uppercase text-gray-300 mb-3">{cat.category}</h3>
                               <div className="flex flex-col gap-3 pl-4 border-l border-gray-100">
                                   {cat.products.map(p => (
                                       <button key={p} onClick={() => navigateToService(cat.category, p)} className="text-[10px] font-bold text-gray-400 text-left uppercase">{p}</button>
@@ -420,4 +423,4 @@ export default function App() {
     </div>
   );
 }
-// TWOKINP V28.0 - HUB-LINK INTEGRATION STABLE
+// TWOKINP V29.0 - FEATURE BAR & ART SEPARATION STABLE
