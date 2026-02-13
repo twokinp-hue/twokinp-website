@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS = {
   companyName: "Twokinp",
   logoUrl: "https://raw.githubusercontent.com/twokinp-hue/twokinp-website/main/logo.jpg",
   address: "Kissimmee, FL - USA",
-  whatsapp: "14075550199",
+  whatsapp: "6893330531",
   email: "twokinp@gmail.com",
   instagramUrl: "https://instagram.com/twokinp",
   facebookUrl: "https://facebook.com",
@@ -43,7 +43,7 @@ const SERVICES_DATA = [
 ];
 
 let db = null;
-const appId = 'twokinp-production-v27';
+const appId = 'twokinp-production-v28';
 
 try {
   const app = getApps().length === 0 ? initializeApp(VERCEL_FIREBASE_CONFIG) : getApps()[0];
@@ -146,16 +146,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-[#FFC107]/30">
+    <div className="min-h-screen bg-white text-gray-900 font-sans">
       
       {/* TOPBAR */}
       <div className="bg-black text-white py-2 px-6 sm:px-12 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
         <div></div>
         <div className="flex items-center gap-8">
-            <a href={`tel:${siteSettings.whatsapp}`} className="flex items-center gap-2 hover:text-[#FFC107] transition-all"><Phone size={12} className="text-[#FFC107]"/> {siteSettings.whatsapp}</a>
+            <a href={`tel:${siteSettings.whatsapp}`} className="flex items-center gap-2 hover:text-[#FFC107]"><Phone size={12} className="text-[#FFC107]"/> {siteSettings.whatsapp}</a>
             <div className="flex gap-4 border-l border-white/20 pl-6">
-                <a href={siteSettings.instagramUrl} target="_blank" className="hover:text-[#FFC107] transition-all"><Instagram size={14}/></a>
-                <a href={siteSettings.facebookUrl} target="_blank" className="hover:text-[#FFC107] transition-all"><Facebook size={14}/></a>
+                <a href={siteSettings.instagramUrl} target="_blank" className="hover:text-[#FFC107]"><Instagram size={14}/></a>
+                <a href={siteSettings.facebookUrl} target="_blank" className="hover:text-[#FFC107]"><Facebook size={14}/></a>
             </div>
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* DASHBOARD ADMIN COMPLETO V27 */}
+      {/* DASHBOARD ADMIN COMPLETO */}
       {isAdminMode && (
           <div className="fixed inset-0 z-[500] bg-white overflow-y-auto p-6 md:p-12 text-left text-black animate-in slide-in-from-bottom">
               <div className="max-w-6xl mx-auto">
@@ -288,13 +288,11 @@ export default function App() {
                       {["banners", "projects", "videos", "settings"].map(t => (<button key={t} onClick={() => setAdminTab(t)} className={`px-4 md:px-10 py-3 rounded-full font-black text-[9px] md:text-[11px] uppercase transition-all ${adminTab === t ? 'bg-white text-black shadow-lg' : 'text-gray-400'}`}>{t}</button>))}
                   </div>
 
-                  {/* ABA DE VÍDEOS RESTAURADA */}
                   {adminTab === "videos" && (
                     <div className="space-y-12">
                       <form onSubmit={handleAddVideo} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-6 md:p-12 rounded-[2.5rem] border shadow-sm">
-                        <h3 className="md:col-span-2 text-xl font-black uppercase text-[#FFC107]">Video Manager</h3>
                         <input placeholder="Video Title" className="p-5 rounded-2xl border font-bold text-black" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} required />
-                        <input placeholder="YouTube Link (Direct)" className="p-5 rounded-2xl border font-bold text-red-500" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} required />
+                        <input placeholder="YouTube Link" className="p-5 rounded-2xl border font-bold text-red-500" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} required />
                         <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-2xl font-black uppercase hover:bg-[#FFC107]">{editingVideoId ? "Save Edit" : "Add Video"}</button>
                       </form>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -303,23 +301,17 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* ABA DE SETTINGS COMPLETA */}
                   {adminTab === "settings" && (
                     <form onSubmit={async (e) => { e.preventDefault(); await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config'), siteSettings); alert("Profile Synced!"); }} className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 bg-gray-50 p-6 md:p-12 rounded-[2.5rem] border text-black shadow-sm">
-                      <h3 className="md:col-span-2 text-xl font-black uppercase text-[#FFC107]">Identity & Info</h3>
                       <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400">Logo URL</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.logoUrl} onChange={e => setSiteSettings({...siteSettings, logoUrl: e.target.value})} /></div>
                       <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400">WhatsApp</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.whatsapp} onChange={e => setSiteSettings({...siteSettings, whatsapp: e.target.value})} /></div>
-                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400">Address</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
                       <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400">Email</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.email} onChange={e => setSiteSettings({...siteSettings, email: e.target.value})} /></div>
-                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400">Instagram URL</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.instagramUrl} onChange={e => setSiteSettings({...siteSettings, instagramUrl: e.target.value})} /></div>
-                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-gray-400">Facebook URL</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.facebookUrl} onChange={e => setSiteSettings({...siteSettings, facebookUrl: e.target.value})} /></div>
+                      <div className="space-y-2 md:col-span-2"><label className="text-[10px] font-black uppercase text-gray-400">Address</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.address} onChange={e => setSiteSettings({...siteSettings, address: e.target.value})} /></div>
                       <div className="space-y-2 md:col-span-2"><label className="text-[10px] font-black uppercase text-gray-400">About Us</label><textarea className="w-full p-5 bg-white border rounded-2xl h-32 font-bold" value={siteSettings.aboutUs} onChange={e => setSiteSettings({...siteSettings, aboutUs: e.target.value})} /></div>
-                      <div className="space-y-2 md:col-span-2"><label className="text-[10px] font-black uppercase text-gray-400">Copyright Text</label><input className="w-full p-5 bg-white border rounded-2xl font-bold" value={siteSettings.copyright} onChange={e => setSiteSettings({...siteSettings, copyright: e.target.value})} /></div>
                       <button type="submit" className="md:col-span-2 bg-black text-white p-6 rounded-3xl font-black uppercase hover:bg-[#FFC107]">Update Website Data</button>
                     </form>
                   )}
 
-                  {/* PROJETOS & BANNERS MANTIDOS */}
                   {adminTab === "projects" && (
                     <div className="space-y-12">
                       <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-12 rounded-[2.5rem] border shadow-sm">
@@ -386,15 +378,15 @@ export default function App() {
       {/* LOGIN MODAL */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-white/95 backdrop-blur-xl animate-in fade-in text-black">
-            <div className="w-full max-w-sm p-12 text-center">
-                <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-10 shadow-sm border border-gray-200"><Lock size={32} /></div>
-                <h2 className="text-3xl font-black uppercase mb-10 tracking-tighter italic">Secure <span className="text-gray-300">Login</span></h2>
+            <div className="w-full max-w-sm p-12 text-center text-black">
+                <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-10 shadow-sm border border-gray-200 text-black"><Lock size={32} /></div>
+                <h2 className="text-3xl font-black uppercase mb-10 tracking-tighter italic text-black">Secure <span className="text-gray-300">Login</span></h2>
                 <form onSubmit={(e) => {
                     e.preventDefault();
                     if (passwordInput === (siteSettings.adminPassword || "admin")) { setIsAdminMode(true); setIsPasswordModalOpen(false); setPasswordInput(""); }
                     else alert("Access Denied");
                 }} className="space-y-4">
-                    <input type="password" placeholder="Dashboard Secret" className="w-full p-6 bg-gray-50 rounded-[2rem] text-center font-bold outline-none border border-gray-100 focus:border-black transition-all" autoFocus onChange={e => setPasswordInput(e.target.value)} />
+                    <input type="password" placeholder="Dashboard Secret" className="w-full p-6 bg-gray-50 rounded-[2rem] text-center font-bold outline-none border border-gray-100 focus:border-black transition-all text-black" autoFocus onChange={e => setPasswordInput(e.target.value)} />
                     <button type="submit" className="w-full bg-black text-white p-6 rounded-[2rem] font-black uppercase tracking-widest shadow-2xl hover:bg-[#FFC107]">Authenticate</button>
                 </form>
             </div>
@@ -408,3 +400,4 @@ export default function App() {
     </div>
   );
 }
+// TWOKINP V28.0 - PHONE UPDATE & DASHBOARD STABLE
