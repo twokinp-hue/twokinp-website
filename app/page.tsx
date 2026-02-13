@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   X, LayoutDashboard, Lock, Phone, Pencil, Menu,
-  ChevronDown, MapPin, Mail, ArrowRight, Trash2,
+  ChevronDown, MapPin, Mail, ArrowRight, Trash2, Palette,
   Instagram, Facebook, ChevronLeft, ChevronRight, Video as VideoIcon
 } from 'lucide-react';
 
@@ -32,7 +32,8 @@ const DEFAULT_SETTINGS = {
   aboutUs: "Twokinp Agency LLC provides high-end visual solutions and digital marketing services.",
   copyright: "© 2026 Twokinp Agency LLC. All Rights Reserved.",
   badgeText: "PREMIUM SOLUTIONS",
-  adminPassword: "admin"
+  adminPassword: "admin",
+  tagArtUrl: "https://tag-art-46907727.hubspotpagebuilder.com/tag-art"
 };
 
 const SERVICES_DATA = [
@@ -182,7 +183,15 @@ export default function App() {
                 </div>
             ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-4">
+            {/* NOVO: BOTÃO TAG ART NO HEADER */}
+            <button 
+              onClick={() => window.open(DEFAULT_SETTINGS.tagArtUrl, '_blank')} 
+              className="hidden sm:flex items-center gap-2 border-2 border-black px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-[#FFC107] transition-all"
+            >
+              <Palette size={14} /> Tag Art
+            </button>
+
             <button onClick={() => setIsPasswordModalOpen(true)} className="p-2 text-gray-300 hover:text-black transition-colors"><LayoutDashboard size={20}/></button>
             <button onClick={() => window.open(`https://wa.me/${siteSettings.whatsapp}`, '_blank')} className="bg-black text-white px-4 md:px-8 py-2 md:py-3 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-[#FFC107]">Get Quote</button>
         </div>
@@ -196,7 +205,18 @@ export default function App() {
                       <img src={siteSettings.logoUrl} alt="Logo" className="h-8" />
                       <button onClick={() => setIsMobileMenuOpen(false)}><X size={24}/></button>
                   </div>
-                  <div className="space-y-6 overflow-y-auto max-h-[80vh]">
+                  
+                  {/* NOVO: LINK TAG ART MOBILE */}
+                  <div className="mb-8 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <button 
+                      onClick={() => window.open(DEFAULT_SETTINGS.tagArtUrl, '_blank')}
+                      className="w-full flex items-center justify-between text-xs font-black uppercase text-black italic"
+                    >
+                      Visit Tag Art Gallery <Palette size={16} className="text-[#FFC107]" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-6 overflow-y-auto max-h-[70vh]">
                       {SERVICES_DATA.map(cat => (
                           <div key={cat.category}>
                               <h3 className="text-xs font-black uppercase text-[#FFC107] mb-3">{cat.category}</h3>
@@ -400,4 +420,4 @@ export default function App() {
     </div>
   );
 }
-// TWOKINP V28.0 - PHONE UPDATE & DASHBOARD STABLE
+// TWOKINP V28.0 - HUB-LINK INTEGRATION STABLE
